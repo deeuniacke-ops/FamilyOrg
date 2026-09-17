@@ -1,0 +1,449 @@
+<title>Cluichí Architecture</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --bg: #fafaf8;
+    --surface: #ffffff;
+    --surface-alt: #f3f2ee;
+    --text: #1a1a18;
+    --text-muted: #6b6a65;
+    --text-faint: #9e9d97;
+    --accent: #2a6f53;
+    --accent-light: #e8f3ed;
+    --border: #e5e4df;
+    --code-bg: #f0efeb;
+    --firebase: #f5820d;
+    --vercel: #000000;
+    --github: #24292e;
+    --arrow: #b0afaa;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141413;
+      --surface: #1c1c1a;
+      --surface-alt: #242422;
+      --text: #e8e7e3;
+      --text-muted: #9e9d97;
+      --text-faint: #6b6a65;
+      --accent: #4db88a;
+      --accent-light: #1a2e24;
+      --border: #2e2e2b;
+      --code-bg: #1e1e1c;
+      --firebase: #ffa040;
+      --vercel: #ffffff;
+      --github: #c9d1d9;
+      --arrow: #4a4a46;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141413;
+    --surface: #1c1c1a;
+    --surface-alt: #242422;
+    --text: #e8e7e3;
+    --text-muted: #9e9d97;
+    --text-faint: #6b6a65;
+    --accent: #4db88a;
+    --accent-light: #1a2e24;
+    --border: #2e2e2b;
+    --code-bg: #1e1e1c;
+    --firebase: #ffa040;
+    --vercel: #ffffff;
+    --github: #c9d1d9;
+    --arrow: #4a4a46;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 5rem;
+  }
+
+  .eyebrow {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+    text-wrap: balance;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin-bottom: 2.5rem;
+    line-height: 1.5;
+  }
+
+  h2 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 2.5rem 0 0.75rem;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 1.75rem 0 0.5rem;
+  }
+
+  p {
+    margin-bottom: 1rem;
+    color: var(--text-muted);
+  }
+
+  strong { color: var(--text); font-weight: 600; }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    color: var(--text);
+  }
+
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: var(--text-muted);
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2.5rem 0;
+  }
+
+  /* Diagram */
+  .diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem 1.5rem;
+    margin: 1.5rem 0 2rem;
+    overflow-x: auto;
+  }
+
+  .diagram svg {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Service cards */
+  .services {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+
+  @media (min-width: 520px) {
+    .services { grid-template-columns: 1fr 1fr; }
+  }
+
+  .service {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+  }
+
+  .service-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .service h3 {
+    margin: 0 0 0.35rem;
+    font-size: 0.9rem;
+  }
+
+  .service p {
+    font-size: 0.82rem;
+    margin: 0;
+    line-height: 1.55;
+  }
+
+  /* Flow list */
+  .flow {
+    list-style: none;
+    margin: 1.25rem 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .flow li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .flow-num {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.1rem;
+  }
+
+  /* File tree */
+  .file-tree {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    line-height: 1.9;
+    color: var(--text-muted);
+  }
+
+  .file-tree .dir { color: var(--accent); font-weight: 500; }
+  .file-tree .note { color: var(--text-faint); font-style: italic; }
+
+  /* Callout */
+  .callout {
+    background: var(--accent-light);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 1rem 1.25rem;
+    margin: 1.5rem 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .callout strong { color: var(--text); }
+</style>
+
+<div class="page">
+
+  <div class="eyebrow">Cluichí · How it works</div>
+  <h1>Architecture Guide</h1>
+  <p class="subtitle">How your code, GitHub, Firebase, and Vercel fit together — and what each one does.</p>
+
+  <!-- DIAGRAM -->
+  <div class="diagram">
+    <svg viewBox="0 0 560 280" xmlns="http://www.w3.org/2000/svg" style="min-width:400px;">
+      <!-- Your Mac -->
+      <rect x="10" y="100" width="120" height="60" rx="10" fill="var(--surface-alt)" stroke="var(--border)"/>
+      <text x="70" y="125" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="11" font-weight="700" fill="var(--text)">Your Mac</text>
+      <text x="70" y="142" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="var(--text-faint)">localhost:3000</text>
+
+      <!-- Arrow: Mac → GitHub -->
+      <line x1="130" y1="130" x2="185" y2="130" stroke="var(--arrow)" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <polygon points="185,126 193,130 185,134" fill="var(--arrow)"/>
+      <text x="158" y="122" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="var(--text-faint)">git push</text>
+
+      <!-- GitHub -->
+      <rect x="195" y="100" width="120" height="60" rx="10" fill="var(--surface-alt)" stroke="var(--border)"/>
+      <text x="255" y="125" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="11" font-weight="700" fill="var(--github)">GitHub</text>
+      <text x="255" y="142" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="var(--text-faint)">stores your code</text>
+
+      <!-- Arrow: GitHub → Vercel -->
+      <line x1="315" y1="130" x2="370" y2="130" stroke="var(--arrow)" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <polygon points="370,126 378,130 370,134" fill="var(--arrow)"/>
+      <text x="345" y="122" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="var(--text-faint)">auto-deploy</text>
+
+      <!-- Vercel -->
+      <rect x="380" y="100" width="140" height="60" rx="10" fill="var(--surface-alt)" stroke="var(--border)"/>
+      <text x="450" y="125" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="11" font-weight="700" fill="var(--vercel)">Vercel</text>
+      <text x="450" y="142" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="var(--text-faint)">cluichi.vercel.app</text>
+
+      <!-- Arrow: Vercel → Phones -->
+      <line x1="450" y1="160" x2="450" y2="205" stroke="var(--arrow)" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <polygon points="446,205 450,213 454,205" fill="var(--arrow)"/>
+
+      <!-- Phones -->
+      <rect x="390" y="215" width="120" height="50" rx="10" fill="var(--accent-light)" stroke="var(--accent)" stroke-width="1.5"/>
+      <text x="450" y="237" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="11" font-weight="600" fill="var(--accent)">Everyone's phones</text>
+      <text x="450" y="252" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="var(--text-faint)">PWA in browser</text>
+
+      <!-- Firebase -->
+      <rect x="175" y="215" width="140" height="50" rx="10" fill="var(--surface-alt)" stroke="var(--border)"/>
+      <text x="245" y="237" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="11" font-weight="700" fill="var(--firebase)">Firebase</text>
+      <text x="245" y="252" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="var(--text-faint)">shared database</text>
+
+      <!-- Arrow: Phones ↔ Firebase -->
+      <line x1="388" y1="240" x2="317" y2="240" stroke="var(--firebase)" stroke-width="1.5"/>
+      <polygon points="319,236 311,240 319,244" fill="var(--firebase)"/>
+      <polygon points="386,236 394,240 386,244" fill="var(--firebase)"/>
+      <text x="352" y="233" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="var(--firebase)">real-time sync</text>
+
+      <!-- Labels -->
+      <text x="70" y="30" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="9" font-weight="600" fill="var(--text-faint)" letter-spacing="0.06em" text-transform="uppercase">YOU DEVELOP</text>
+      <text x="255" y="30" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="9" font-weight="600" fill="var(--text-faint)" letter-spacing="0.06em">CODE LIVES HERE</text>
+      <text x="450" y="30" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="9" font-weight="600" fill="var(--text-faint)" letter-spacing="0.06em">USERS SEE THIS</text>
+
+      <!-- Vertical guide lines -->
+      <line x1="70" y1="38" x2="70" y2="95" stroke="var(--border)" stroke-width="1" stroke-dasharray="2,4"/>
+      <line x1="255" y1="38" x2="255" y2="95" stroke="var(--border)" stroke-width="1" stroke-dasharray="2,4"/>
+      <line x1="450" y1="38" x2="450" y2="95" stroke="var(--border)" stroke-width="1" stroke-dasharray="2,4"/>
+    </svg>
+  </div>
+
+  <hr class="divider">
+
+  <h2>The three services</h2>
+  <p>Your app uses three external services. All are free tier, all are on your <strong>personal accounts</strong> — nothing touches work.</p>
+
+  <div class="services">
+    <div class="service">
+      <div class="service-icon" style="background: #24292e12; color: #24292e;">GH</div>
+      <h3>GitHub</h3>
+      <p><strong>What:</strong> Stores your code online.<br>
+      <strong>Account:</strong> Duniacke (personal)<br>
+      <strong>Repo:</strong> github.com/Duniacke/cluichi</p>
+    </div>
+    <div class="service">
+      <div class="service-icon" style="background: var(--accent-light); color: var(--accent);">▲</div>
+      <h3>Vercel</h3>
+      <p><strong>What:</strong> Takes code from GitHub, builds it, and hosts it at a public URL.<br>
+      <strong>Account:</strong> deeuniacke-2384 (personal)</p>
+    </div>
+    <div class="service">
+      <div class="service-icon" style="background: #f5820d18; color: #f5820d;">🔥</div>
+      <h3>Firebase</h3>
+      <p><strong>What:</strong> Shared database. When Ciara taps "available", Dee sees it.<br>
+      <strong>Project:</strong> cluichi-41e2d (your Google account)</p>
+    </div>
+    <div class="service">
+      <div class="service-icon" style="background: #e8f3ed; color: var(--accent);">📱</div>
+      <h3>PWA</h3>
+      <p><strong>What:</strong> The app installs on phones like a native app, straight from the browser. No app store needed.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <h2>How data flows</h2>
+
+  <h3>When you push code</h3>
+  <ul class="flow">
+    <li><span class="flow-num">1</span>You edit code on your Mac</li>
+    <li><span class="flow-num">2</span><code>git push</code> sends it to GitHub</li>
+    <li><span class="flow-num">3</span>Vercel detects the push, builds the app, deploys it</li>
+    <li><span class="flow-num">4</span>Everyone on the live URL gets the new version</li>
+  </ul>
+
+  <h3>When a player taps "available"</h3>
+  <ul class="flow">
+    <li><span class="flow-num">1</span>Their phone writes to <strong>localStorage</strong> (instant, local)</li>
+    <li><span class="flow-num">2</span>Simultaneously writes to <strong>Firebase</strong> (shared database)</li>
+    <li><span class="flow-num">3</span>Firebase sends a real-time update to every other phone</li>
+    <li><span class="flow-num">4</span>Other phones update their localStorage and refresh the grid</li>
+  </ul>
+
+  <div class="callout">
+    <strong>Why both localStorage and Firebase?</strong> localStorage makes the app feel instant — no loading spinner when you tap. Firebase makes it shared. The app writes to both at the same time: local for speed, Firebase for everyone else.
+  </div>
+
+  <hr class="divider">
+
+  <h2>Key files</h2>
+  <div class="file-tree">
+    <span class="dir">src/lib/</span><br>
+    &nbsp;&nbsp;firebase.ts <span class="note">— connects to your Firebase project</span><br>
+    &nbsp;&nbsp;store.ts <span class="note">— all reads/writes; syncs localStorage ↔ Firestore</span><br>
+    &nbsp;&nbsp;mock-data.ts <span class="note">— seed data (rosters, fixtures)</span><br>
+    &nbsp;&nbsp;types.ts <span class="note">— TypeScript types</span><br>
+    <br>
+    <span class="dir">src/components/</span><br>
+    &nbsp;&nbsp;FirestoreSync.tsx <span class="note">— sets up real-time listeners on app load</span><br>
+    <br>
+    <span class="dir">src/app/</span><br>
+    &nbsp;&nbsp;page.tsx <span class="note">— Home (availability grid)</span><br>
+    &nbsp;&nbsp;season/page.tsx <span class="note">— Season overview + planner</span><br>
+    &nbsp;&nbsp;event/[id]/page.tsx <span class="note">— Single match detail</span><br>
+    &nbsp;&nbsp;manage/page.tsx <span class="note">— Admin: players, matches, divisions</span><br>
+  </div>
+
+  <hr class="divider">
+
+  <h2>Your daily workflow</h2>
+  <pre>
+# 1. Make changes
+code src/app/page.tsx        # edit in VS Code
+
+# 2. Test locally
+npm run dev                  # see at localhost:3000
+
+# 3. Push to GitHub
+git add -A
+git commit -m "what I changed"
+git push origin main
+
+# 4. Vercel auto-deploys
+# → live at cluichi.vercel.app in ~30 seconds</pre>
+
+  <hr class="divider">
+
+  <h2>Costs</h2>
+  <p>All three services are on <strong>free tiers</strong>. For a hockey club app, you won't come close to any limits:</p>
+  <ul class="flow">
+    <li><span class="flow-num">✓</span><strong>GitHub</strong> — free for public and private repos</li>
+    <li><span class="flow-num">✓</span><strong>Vercel</strong> — free hobby plan, 100GB bandwidth/month</li>
+    <li><span class="flow-num">✓</span><strong>Firebase</strong> — Spark plan, 1GB storage, 50K reads/day</li>
+  </ul>
+
+  <div class="callout">
+    <strong>Firestore test mode expires in 30 days.</strong> Before then you'll need to set proper security rules. I can help with that when you're ready.
+  </div>
+
+</div>

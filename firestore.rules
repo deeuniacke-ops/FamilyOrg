@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Teams ──
+    // Anyone can read. Writes must have required fields and reasonable sizes.
+    match /teams/{teamId} {
+      allow read: if true;
+      allow create, update: if
+        request.resource.data.keys().hasAll(['name']) &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() < 200;
+      allow delete: if true;
+    }
+
+    // ── Players ──
+    match /players/{playerId} {
+      allow read: if true;
+      allow create, update: if
+        request.resource.data.keys().hasAll(['name']) &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() < 200;
+      allow delete: if true;
+    }
+
+    // ── Events (fixtures, training, etc.) ──
+    match /events/{eventId} {
+      allow read: if true;
+      allow create, update: if
+        request.resource.data.keys().hasAll(['title', 'date', 'type', 'teamId']) &&
+        request.resource.data.title is string &&
+        request.resource.data.date is string &&
+        request.resource.data.type in ['match', 'training', 'other'];
+      allow delete: if true;
+    }
+
+    // ── Responses (availability) ──
+    match /responses/{responseId} {
+      allow read: if true;
+      allow create, update: if
+        request.resource.data.keys().hasAll(['eventId', 'playerId', 'status']) &&
+        request.resource.data.status in ['in', 'out', 'maybe', null];
+      allow delete: if true;
+    }
+
+    // ── Settings (club name, etc.) ──
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if
+        request.resource.data.size() < 10 &&
+        docId in ['club'];
+    }
+
+    // ── Block everything else ──
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
