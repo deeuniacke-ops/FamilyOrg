@@ -61,6 +61,8 @@ export default function AddActivityPage() {
   const [processing, setProcessing] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [voiceError, setVoiceError] = useState("");
+  const [listening, setListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
 
   const [photoProcessing, setPhotoProcessing] = useState(false);
   const [photoError, setPhotoError] = useState("");
@@ -71,6 +73,8 @@ export default function AddActivityPage() {
     refresh();
     setMounted(true);
     window.addEventListener("family-sync", refresh);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    setSpeechSupported(!!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition));
     return () => window.removeEventListener("family-sync", refresh);
   }, []);
 
@@ -166,6 +170,48 @@ export default function AddActivityPage() {
     if (!ok) setVoiceError("Couldn't understand that — try rephrasing or fill it in manually below");
   };
 
+  const handleRecord = async () => {
+    if (listening || processing) return;
+    setVoiceError("");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((t) => t.stop());
+    } catch {
+      setVoiceError("Microphone blocked — check your browser settings");
+      return;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) { setVoiceError("Voice not supported on this browser"); return; }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-IE";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.onstart = () => { setListening(true); setVoiceError(""); };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    recognition.onresult = (event: any) => {
+      setListening(false);
+      const text = event.results[0]?.[0]?.transcript?.trim() || "";
+      if (!text) { setVoiceError("Didn't catch that — try again"); return; }
+      setTranscript(text);
+      setProcessing(true);
+      fillFromVoice(text)
+        .then((ok) => { if (!ok) setVoiceError("Couldn't understand that — try rephrasing or fill it in manually below"); })
+        .finally(() => setProcessing(false));
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    recognition.onerror = (event: any) => {
+      setListening(false);
+      const err = event?.error || "unknown";
+      if (err === "no-speech") setVoiceError("No speech detected — tap and speak clearly");
+      else if (err === "not-allowed") setVoiceError("Microphone blocked — check browser settings");
+      else setVoiceError(`Voice error: ${err}`);
+    };
+    recognition.onend = () => setListening(false);
+    try { recognition.start(); } catch { setVoiceError("Could not start — try refreshing"); }
+  };
+
   const handleSaveAll = () => {
     const valid = drafts.filter((d) => d.childId && d.title.trim() && d.date && d.time);
     if (!valid.length) return;
@@ -219,6 +265,14 @@ export default function AddActivityPage() {
       <p className="text-sm text-slate-400 mb-5">Say it, type it, or snap a photo</p>
 
       <div className="mb-6">
+        {speechSupported && (
+          <div className="flex flex-col items-center mb-3">
+            <button type="button" onClick={handleRecord} disabled={listening || processing} className={`flex h-14 w-14 items-center justify-center rounded-full text-xl shadow-lg transition-all active:scale-95 ${listening ? "animate-pulse bg-red-500 text-white ring-4 ring-red-200" : processing ? "bg-amber-500 text-white animate-pulse" : "bg-gradient-to-r from-violet-600 via-pink-500 to-amber-400 text-white"}`}>
+              {listening ? "🎤" : processing ? "⏳" : "🎙"}
+            </button>
+            <p className="text-xs text-slate-400 mt-1.5">{listening ? "Listening…" : processing ? "Processing…" : "Tap to speak"}</p>
+          </div>
+        )}
         <div className="flex gap-2 mb-2">
           <input
             type="text"
@@ -232,7 +286,9 @@ export default function AddActivityPage() {
             {processing ? "…" : "Fill in"}
           </button>
         </div>
-        <p className="text-[11px] text-slate-400 text-center mb-3">Tap the field and use your keyboard&apos;s dictation mic to speak it, or just type</p>
+        <p className="text-[11px] text-slate-400 text-center mb-3">
+          {speechSupported ? "Or type it in below" : "Tap the field and use your keyboard’s dictation mic to speak it, or just type"}
+        </p>
 
         <div className="flex justify-center">
           <div className="flex flex-col items-center">
