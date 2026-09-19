@@ -134,8 +134,11 @@ export default function HomePage() {
       for (const a of upcoming) { const m = monthLabel(a.date); (months[m] ??= []).push(a); }
       return <div className="flex flex-col gap-5">
         {Object.entries(months).map(([month, items]) => (
-          <section key={month}>
-            <h3 className="mb-2 text-sm font-black text-violet-600 uppercase tracking-wider">{month}</h3>
+          <details key={month} className="group" open>
+            <summary className="mb-2 flex cursor-pointer list-none items-center justify-between text-sm font-black text-violet-600 uppercase tracking-wider [&::-webkit-details-marker]:hidden">
+              <span>{month} <span className="ml-1 text-[10px] font-medium normal-case text-slate-400">({items.length})</span></span>
+              <span className="text-slate-400 transition-transform group-open:rotate-90">›</span>
+            </summary>
             <div className="flex flex-col gap-2">
               {items.map((activity) => {
                 const child = children.find((c) => c.id === activity.childId);
@@ -157,7 +160,7 @@ export default function HomePage() {
                 </Link>;
               })}
             </div>
-          </section>
+          </details>
         ))}
       </div>;
     })()}
