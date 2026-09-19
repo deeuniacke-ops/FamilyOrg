@@ -4,32 +4,10 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { addActivity, getChildren, getHelpers, Child } from "@/lib/family-store";
 import { parseTranscriptLocally } from "@/lib/voice-parser";
+import { resizeImageToJpeg } from "@/lib/image";
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
-}
-
-function resizeImageToJpeg(file: File, maxDimension = 1200, quality = 0.8): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("Could not read file"));
-    reader.onload = () => {
-      const img = new Image();
-      img.onerror = () => reject(new Error("Could not load image"));
-      img.onload = () => {
-        const scale = Math.min(1, maxDimension / Math.max(img.width, img.height));
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-        const ctx = canvas.getContext("2d");
-        if (!ctx) { reject(new Error("Canvas unavailable")); return; }
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL("image/jpeg", quality).split(",")[1] || "");
-      };
-      img.src = reader.result as string;
-    };
-    reader.readAsDataURL(file);
-  });
 }
 
 type DraftActivity = {
@@ -310,7 +288,7 @@ function ActivityCard({ draft, index, children, helpers, total, onUpdate, onRemo
       <div className="flex flex-wrap gap-2 mb-3">
         {children.map((child) => (
           <button key={child.id} type="button" onClick={() => onUpdate("childId", child.id)} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${draft.childId === child.id ? "ring-2 ring-violet-500 bg-white shadow" : "bg-gray-100 text-slate-500"}`}>
-            <span className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-bold" style={{ backgroundColor: child.color }}>{child.initials}</span>
+            <span className="flex h-5 w-5 items-center justify-center rounded-full text-white text-[9px] font-black" style={{ backgroundColor: child.color }}>{child.initials}</span>
             {child.name}
           </button>
         ))}

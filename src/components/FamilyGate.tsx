@@ -20,6 +20,15 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
   const [pendingNewFamily, setPendingNewFamily] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sharedId = params.get("fid");
+    if (sharedId && /^[a-f0-9]{64}$/.test(sharedId)) {
+      window.history.replaceState({}, "", window.location.pathname);
+      storeFamilyId(sharedId);
+      initFamilySync(sharedId);
+      setReady(true);
+      return;
+    }
     const storedId = getStoredFamilyId();
     if (storedId) {
       initFamilySync(storedId);

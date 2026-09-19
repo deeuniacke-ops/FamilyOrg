@@ -116,7 +116,7 @@ export default function HomePage() {
                 const hasClash = dayClashes.has(activity.id);
                 const realId = activity.id.replace(/_\d{4}-\d{2}-\d{2}$/, "");
                 return <Link key={activity.id} href={`/activity/${realId}`} className={`flex items-center gap-3 rounded-xl border-2 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors ${hasClash ? "border-red-200" : "border-slate-100"}`}>
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-black text-white" style={{ backgroundColor: child?.color || "#94a3b8" }}>{child?.initials || "?"}</span>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white text-sm font-black" style={{ backgroundColor: child?.color }}>{child?.initials}</span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-slate-900">{activity.title}</p>
                     <p className="text-xs text-slate-500">{child?.name} · {timeLabel(activity.time)} · {activity.durationMinutes}m</p>
@@ -162,7 +162,7 @@ export default function HomePage() {
                 const child = children.find((c) => c.id === activity.childId);
                 const realId = activity.id.replace(/_\d{4}-\d{2}-\d{2}$/, "");
                 return <Link key={activity.id} href={`/activity/${realId}`} className="flex items-center gap-3 rounded-xl border-2 border-slate-100 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-black text-white" style={{ backgroundColor: child?.color || "#94a3b8" }}>{child?.initials || "?"}</span>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white text-sm font-black" style={{ backgroundColor: child?.color }}>{child?.initials}</span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-slate-900">{activity.title}</p>
                     <p className="text-xs text-slate-500">{child?.name} · {dayLabel(activity.date)}</p>

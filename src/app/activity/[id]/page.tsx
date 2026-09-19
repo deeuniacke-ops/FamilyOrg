@@ -105,7 +105,7 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
         <div className="flex flex-wrap gap-2 mb-3">
           {children.map((c) => (
             <button key={c.id} type="button" onClick={() => setChildId(c.id)} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${childId === c.id ? "ring-2 ring-violet-500 bg-white shadow" : "bg-gray-100 text-slate-500"}`}>
-              <span className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-bold" style={{ backgroundColor: c.color }}>{c.initials}</span>
+              <span className="flex h-5 w-5 items-center justify-center rounded-full text-white text-[9px] font-black" style={{ backgroundColor: c.color }}>{c.initials}</span>
               {c.name}
             </button>
           ))}
