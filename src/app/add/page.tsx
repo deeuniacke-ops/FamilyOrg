@@ -1,12 +1,35 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { addActivity, getChildren, Child } from "@/lib/family-store";
 import { parseTranscriptLocally } from "@/lib/voice-parser";
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function resizeImageToJpeg(file: File, maxDimension = 1200, quality = 0.8): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Could not read file"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Could not load image"));
+      img.onload = () => {
+        const scale = Math.min(1, maxDimension / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { reject(new Error("Canvas unavailable")); return; }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", quality).split(",")[1] || "");
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 const OWNERS = ["Mum", "Dad", "Nana", "Grandad", "Carpool"];
@@ -38,6 +61,10 @@ export default function AddActivityPage() {
   const [processing, setProcessing] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [voiceError, setVoiceError] = useState("");
+
+  const [photoProcessing, setPhotoProcessing] = useState(false);
+  const [photoError, setPhotoError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setChildren(getChildren());
@@ -93,6 +120,35 @@ export default function AddActivityPage() {
       const parsed = draftsFromParsed(result.activities);
       if (parsed.length) { setDrafts(parsed); return; }
     }
+  };
+
+  const fillFromImage = async (file: File) => {
+    setPhotoError("");
+    setPhotoProcessing(true);
+    try {
+      const base64 = await resizeImageToJpeg(file);
+      const res = await fetch("/api/parse-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: base64, mediaType: "image/jpeg", children: getChildren() }),
+      });
+      const data = await res.json();
+      if (data.activities?.length) {
+        const parsed = draftsFromParsed(data.activities);
+        if (parsed.length) { setDrafts(parsed); return; }
+      }
+      setPhotoError(data.message || "Couldn't find an activity in that photo — try adding it manually");
+    } catch {
+      setPhotoError("Couldn't read that photo — try again");
+    } finally {
+      setPhotoProcessing(false);
+    }
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (file) fillFromImage(file);
   };
 
   const handleRecord = async () => {
@@ -164,15 +220,27 @@ export default function AddActivityPage() {
       </button>
 
       <h2 className="text-xl font-bold text-slate-900 mb-1">Add Activities</h2>
-      <p className="text-sm text-slate-400 mb-5">Use voice or type it in</p>
+      <p className="text-sm text-slate-400 mb-5">Use voice, a photo, or type it in</p>
 
       <div className="flex flex-col items-center mb-6">
-        <button type="button" onClick={handleRecord} disabled={listening || processing} className={`flex h-16 w-16 items-center justify-center rounded-full text-2xl shadow-lg transition-all active:scale-95 ${listening ? "animate-pulse bg-red-500 text-white ring-4 ring-red-200" : processing ? "bg-amber-500 text-white animate-pulse" : "bg-gradient-to-r from-violet-600 via-pink-500 to-amber-400 text-white"}`}>
-          {listening ? "🎤" : processing ? "⏳" : "🎙"}
-        </button>
-        <p className="text-xs text-slate-400 mt-2">{listening ? "Listening… speak now" : processing ? "Processing…" : "Tap to speak"}</p>
+        <div className="flex items-center gap-6">
+          <div className="flex flex-col items-center">
+            <button type="button" onClick={handleRecord} disabled={listening || processing} className={`flex h-16 w-16 items-center justify-center rounded-full text-2xl shadow-lg transition-all active:scale-95 ${listening ? "animate-pulse bg-red-500 text-white ring-4 ring-red-200" : processing ? "bg-amber-500 text-white animate-pulse" : "bg-gradient-to-r from-violet-600 via-pink-500 to-amber-400 text-white"}`}>
+              {listening ? "🎤" : processing ? "⏳" : "🎙"}
+            </button>
+            <p className="text-xs text-slate-400 mt-2">{listening ? "Listening…" : processing ? "Processing…" : "Speak"}</p>
+          </div>
+          <div className="flex flex-col items-center">
+            <button type="button" onClick={() => fileInputRef.current?.click()} disabled={photoProcessing} className={`flex h-16 w-16 items-center justify-center rounded-full text-2xl shadow-lg transition-all active:scale-95 ${photoProcessing ? "bg-amber-500 text-white animate-pulse" : "bg-gradient-to-r from-violet-600 via-pink-500 to-amber-400 text-white"}`}>
+              {photoProcessing ? "⏳" : "📷"}
+            </button>
+            <p className="text-xs text-slate-400 mt-2">{photoProcessing ? "Reading…" : "Photo"}</p>
+          </div>
+        </div>
+        <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoChange} className="hidden" />
         {transcript && <div className="mt-2 bg-violet-50 border border-violet-100 rounded-lg px-3 py-2 text-xs text-violet-700 font-medium text-center max-w-xs">&ldquo;{transcript}&rdquo;</div>}
         {voiceError && <div className="mt-2 bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-red-600 font-medium text-center max-w-xs">{voiceError}</div>}
+        {photoError && <div className="mt-2 bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-red-600 font-medium text-center max-w-xs">{photoError}</div>}
       </div>
 
       <div className="space-y-4">
