@@ -32,11 +32,12 @@ export default function HomePage() {
   const [selectedDate, setSelectedDate] = useState(dateKey(new Date()));
   const [view, setView] = useState<"list" | "upcoming">("list");
   const [mounted, setMounted] = useState(false);
+  const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const dateInputRef = useRef<HTMLInputElement>(null);
 
   const today = dateKey(new Date());
   const listDates = Array.from({ length: 7 }, (_, i) => addDays(selectedDate, i));
-  const activities = getActivitiesForDates(listDates);
+  const activities = getActivitiesForDates(listDates).filter((a) => !selectedChildId || a.childId === selectedChildId);
 
   const refresh = () => { setChildren(getChildren()); setRawActivities(getActivities()); };
   useEffect(() => {
@@ -53,6 +54,25 @@ export default function HomePage() {
     <div className="mb-4 flex items-end justify-between">
       <div><h2 className="text-2xl font-black tracking-tight text-slate-900">Activities</h2><p className="text-xs text-slate-500 mt-1">{children.length} family members · Family calendar</p></div>
       <span className="rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-bold text-violet-600">Clann</span>
+    </div>
+
+    <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+      <button
+        onClick={() => setSelectedChildId(null)}
+        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[10px] font-black transition-all ${!selectedChildId ? "bg-violet-100 text-violet-600 ring-2 ring-violet-500" : "bg-slate-100 text-slate-400"}`}
+      >
+        All
+      </button>
+      {children.map((child) => (
+        <button
+          key={child.id}
+          onClick={() => setSelectedChildId(selectedChildId === child.id ? null : child.id)}
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xs font-black text-white transition-all ${selectedChildId === child.id ? "ring-2 ring-offset-2 ring-violet-500" : selectedChildId ? "opacity-40" : ""}`}
+          style={{ backgroundColor: child.color }}
+        >
+          {child.initials}
+        </button>
+      ))}
     </div>
 
     <div className="mb-3 flex rounded-xl bg-slate-100 p-1">
@@ -125,7 +145,7 @@ export default function HomePage() {
     {view === "upcoming" && (() => {
       // Generate dates for the next 90 days so weekly recurring activities expand
       const upcomingDates = Array.from({ length: 90 }, (_, i) => addDays(today, i));
-      const expanded = getActivitiesForDates(upcomingDates);
+      const expanded = getActivitiesForDates(upcomingDates).filter((a) => !selectedChildId || a.childId === selectedChildId);
       // Dedupe by id (expanded recurring activities get unique ids per date already)
       const seen = new Set<string>();
       const upcoming = expanded
