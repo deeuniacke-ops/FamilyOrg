@@ -265,14 +265,24 @@ export default function AddActivityPage() {
       <p className="text-sm text-slate-400 mb-5">Say it, type it, or snap a photo</p>
 
       <div className="mb-6">
-        {speechSupported && (
-          <div className="flex flex-col items-center mb-3">
-            <button type="button" onClick={handleRecord} disabled={listening || processing} className={`flex h-14 w-14 items-center justify-center rounded-full text-xl shadow-lg transition-all active:scale-95 ${listening ? "animate-pulse bg-red-500 text-white ring-4 ring-red-200" : processing ? "bg-amber-500 text-white animate-pulse" : "bg-gradient-to-r from-violet-600 via-pink-500 to-amber-400 text-white"}`}>
-              {listening ? "🎤" : processing ? "⏳" : "🎙"}
+        <div className="flex items-center justify-center gap-6 mb-3">
+          {speechSupported && (
+            <div className="flex flex-col items-center">
+              <button type="button" onClick={handleRecord} disabled={listening || processing} className={`flex h-16 w-16 items-center justify-center rounded-full text-2xl shadow-lg transition-all active:scale-95 ${listening ? "animate-pulse bg-red-500 text-white ring-4 ring-red-200" : processing ? "bg-amber-500 text-white animate-pulse" : "bg-gradient-to-r from-violet-600 via-pink-500 to-amber-400 text-white"}`}>
+                {listening ? "🎤" : processing ? "⏳" : "🎙"}
+              </button>
+              <p className="text-xs text-slate-400 mt-2">{listening ? "Listening…" : processing ? "Processing…" : "Tap to speak"}</p>
+            </div>
+          )}
+          <div className="flex flex-col items-center">
+            <button type="button" onClick={() => fileInputRef.current?.click()} disabled={photoProcessing} className={`flex h-16 w-16 items-center justify-center rounded-full text-2xl shadow-lg transition-all active:scale-95 ${photoProcessing ? "bg-amber-500 text-white animate-pulse" : "bg-gradient-to-r from-violet-600 via-pink-500 to-amber-400 text-white"}`}>
+              {photoProcessing ? "⏳" : "📷"}
             </button>
-            <p className="text-xs text-slate-400 mt-1.5">{listening ? "Listening…" : processing ? "Processing…" : "Tap to speak"}</p>
+            <p className="text-xs text-slate-400 mt-2">{photoProcessing ? "Reading…" : "Add a photo"}</p>
           </div>
-        )}
+        </div>
+        <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+
         <div className="flex gap-2 mb-2">
           <input
             type="text"
@@ -287,18 +297,8 @@ export default function AddActivityPage() {
           </button>
         </div>
         <p className="text-[11px] text-slate-400 text-center mb-3">
-          {speechSupported ? "Or type it in below" : "Tap the field and use your keyboard’s dictation mic to speak it, or just type"}
+          {speechSupported ? "Or type it in above" : "Tap the field and use your keyboard’s dictation mic to speak it, or just type"}
         </p>
-
-        <div className="flex justify-center">
-          <div className="flex flex-col items-center">
-            <button type="button" onClick={() => fileInputRef.current?.click()} disabled={photoProcessing} className={`flex h-16 w-16 items-center justify-center rounded-full text-2xl shadow-lg transition-all active:scale-95 ${photoProcessing ? "bg-amber-500 text-white animate-pulse" : "bg-gradient-to-r from-violet-600 via-pink-500 to-amber-400 text-white"}`}>
-              {photoProcessing ? "⏳" : "📷"}
-            </button>
-            <p className="text-xs text-slate-400 mt-2">{photoProcessing ? "Reading…" : "Or add a photo"}</p>
-          </div>
-        </div>
-        <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
         {voiceError && <div className="mt-2 bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-red-600 font-medium text-center max-w-xs mx-auto">{voiceError}</div>}
         {photoError && <div className="mt-2 bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-red-600 font-medium text-center max-w-xs mx-auto">{photoError}</div>}
       </div>
