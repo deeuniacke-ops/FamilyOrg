@@ -59,7 +59,6 @@ export default function AddActivityPage() {
   const [drafts, setDrafts] = useState<DraftActivity[]>([emptyDraft()]);
 
   const [processing, setProcessing] = useState(false);
-  const [transcript, setTranscript] = useState("");
   const [voiceError, setVoiceError] = useState("");
   const [listening, setListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
@@ -160,16 +159,6 @@ export default function AddActivityPage() {
     if (file) fillFromImage(file);
   };
 
-  const handleParseVoice = async () => {
-    const text = transcript.trim();
-    if (!text || processing) return;
-    setVoiceError("");
-    setProcessing(true);
-    const ok = await fillFromVoice(text);
-    setProcessing(false);
-    if (!ok) setVoiceError("Couldn't understand that — try rephrasing or fill it in manually below");
-  };
-
   const handleRecord = async () => {
     if (listening || processing) return;
     setVoiceError("");
@@ -194,7 +183,6 @@ export default function AddActivityPage() {
       setListening(false);
       const text = event.results[0]?.[0]?.transcript?.trim() || "";
       if (!text) { setVoiceError("Didn't catch that — try again"); return; }
-      setTranscript(text);
       setProcessing(true);
       fillFromVoice(text)
         .then((ok) => { if (!ok) setVoiceError("Couldn't understand that — try rephrasing or fill it in manually below"); })
@@ -262,7 +250,7 @@ export default function AddActivityPage() {
       </button>
 
       <h2 className="text-xl font-bold text-slate-900 mb-1">Add Activities</h2>
-      <p className="text-sm text-slate-400 mb-5">Say it, type it, or snap a photo</p>
+      <p className="text-sm text-slate-400 mb-5">Say it, snap a photo, or fill it in below</p>
 
       <div className="mb-6">
         <div className="flex items-center justify-center gap-6 mb-3">
@@ -282,23 +270,6 @@ export default function AddActivityPage() {
           </div>
         </div>
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
-        <p className="text-[11px] text-slate-400 text-center mb-2">
-          {speechSupported ? "Or type it in below" : "Tap the field below and use your keyboard’s dictation mic to speak it, or just type"}
-        </p>
-
-        <div className="flex gap-2 mb-2">
-          <input
-            type="text"
-            value={transcript}
-            onChange={(e) => setTranscript(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") handleParseVoice(); }}
-            placeholder="e.g. Jane, football, Saturday 3pm"
-            className="min-w-0 flex-1 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-violet-500 focus:outline-none text-sm"
-          />
-          <button type="button" onClick={handleParseVoice} disabled={!transcript.trim() || processing} className="shrink-0 px-4 rounded-xl bg-violet-600 text-white text-sm font-bold disabled:opacity-30">
-            {processing ? "…" : "Fill in"}
-          </button>
-        </div>
         {voiceError && <div className="mt-2 bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-red-600 font-medium text-center max-w-xs mx-auto">{voiceError}</div>}
         {photoError && <div className="mt-2 bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-red-600 font-medium text-center max-w-xs mx-auto">{photoError}</div>}
       </div>

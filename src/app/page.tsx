@@ -51,9 +51,8 @@ export default function HomePage() {
 
   return <div className="animate-fade-in">
     <InstallPrompt />
-    <h2 className="mb-3 text-2xl font-black tracking-tight text-slate-900">Activities</h2>
 
-    <div className="mb-3 flex gap-1.5 overflow-x-auto pb-1">
+    <div className="mb-3 flex justify-center gap-1.5 overflow-x-auto pb-1">
       <button
         onClick={() => setSelectedChildId(null)}
         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[9px] font-black transition-all ${!selectedChildId ? "bg-violet-100 text-violet-600 ring-2 ring-violet-500" : "bg-slate-100 text-slate-400"}`}
