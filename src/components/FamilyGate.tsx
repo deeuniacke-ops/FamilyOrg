@@ -21,6 +21,7 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
   const [ready, setReady] = useState(false);
   const [name, setName] = useState("");
   const [passphrase, setPassphrase] = useState("");
+  const [showPassphrase, setShowPassphrase] = useState(false);
   const [checking, setChecking] = useState(false);
   const [joining, setJoining] = useState(false);
   const [pendingNewFamily, setPendingNewFamily] = useState<{ id: string; name: string } | null>(null);
@@ -139,14 +140,23 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
               placeholder="Family name"
               className="w-full rounded-xl border-2 border-gray-200 bg-white px-3 py-3 text-sm text-slate-900 focus:border-violet-500 focus:outline-none"
             />
-            <input
-              value={passphrase}
-              onChange={(e) => setPassphrase(e.target.value)}
-              type="password"
-              placeholder="Shared passphrase"
-              onKeyDown={(e) => { if (e.key === "Enter") handleJoin(); }}
-              className="w-full rounded-xl border-2 border-gray-200 bg-white px-3 py-3 text-sm text-slate-900 focus:border-violet-500 focus:outline-none"
-            />
+            <div className="relative">
+              <input
+                value={passphrase}
+                onChange={(e) => setPassphrase(e.target.value)}
+                type={showPassphrase ? "text" : "password"}
+                placeholder="Shared passphrase"
+                onKeyDown={(e) => { if (e.key === "Enter") handleJoin(); }}
+                className="w-full rounded-xl border-2 border-gray-200 bg-white px-3 py-3 pr-16 text-sm text-slate-900 focus:border-violet-500 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassphrase((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-violet-500"
+              >
+                {showPassphrase ? "Hide" : "Show"}
+              </button>
+            </div>
             <button
               onClick={handleJoin}
               disabled={!name.trim() || !passphrase.trim() || joining || checking}
