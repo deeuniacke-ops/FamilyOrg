@@ -58,7 +58,6 @@ export default function AddActivityPage() {
 
   const [drafts, setDrafts] = useState<DraftActivity[]>([emptyDraft()]);
 
-  const [listening, setListening] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [voiceError, setVoiceError] = useState("");
@@ -105,8 +104,7 @@ export default function AddActivityPage() {
       }));
   };
 
-  const fillFromVoice = async (text: string) => {
-    setTranscript(text);
+  const fillFromVoice = async (text: string): Promise<boolean> => {
     try {
       const res = await fetch("/api/parse-voice", {
         method: "POST",
@@ -117,15 +115,16 @@ export default function AddActivityPage() {
         const data = await res.json();
         if (data.activities?.length) {
           const parsed = draftsFromParsed(data.activities);
-          if (parsed.length) { setDrafts(parsed); return; }
+          if (parsed.length) { setDrafts(parsed); return true; }
         }
       }
     } catch {}
     const result = parseTranscriptLocally(text);
     if (result.activities?.length) {
       const parsed = draftsFromParsed(result.activities);
-      if (parsed.length) { setDrafts(parsed); return; }
+      if (parsed.length) { setDrafts(parsed); return true; }
     }
+    return false;
   };
 
   const fillFromImage = async (file: File) => {
@@ -157,43 +156,14 @@ export default function AddActivityPage() {
     if (file) fillFromImage(file);
   };
 
-  const handleRecord = async () => {
-    if (listening || processing) return;
+  const handleParseVoice = async () => {
+    const text = transcript.trim();
+    if (!text || processing) return;
     setVoiceError("");
-    setTranscript("");
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach((t) => t.stop());
-    } catch {
-      setVoiceError("Microphone blocked — tap the 🔒 in your address bar to allow");
-      return;
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) { setVoiceError("Voice not supported — use Chrome"); return; }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = "en-IE";
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.onstart = () => { setListening(true); setVoiceError(""); };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    recognition.onresult = (event: any) => {
-      setListening(false);
-      const text = event.results[0]?.[0]?.transcript?.trim() || "";
-      if (text) { setProcessing(true); fillFromVoice(text).finally(() => setProcessing(false)); }
-      else setVoiceError("Didn't catch that — try again");
-    };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    recognition.onerror = (event: any) => {
-      setListening(false);
-      const err = event?.error || "unknown";
-      if (err === "no-speech") setVoiceError("No speech detected — tap and speak clearly");
-      else if (err === "not-allowed") setVoiceError("Microphone blocked — check browser settings");
-      else setVoiceError(`Voice error: ${err}`);
-    };
-    recognition.onend = () => setListening(false);
-    try { recognition.start(); } catch { setVoiceError("Could not start — try refreshing"); }
+    setProcessing(true);
+    const ok = await fillFromVoice(text);
+    setProcessing(false);
+    if (!ok) setVoiceError("Couldn't understand that — try rephrasing or fill it in manually below");
   };
 
   const handleSaveAll = () => {
@@ -246,27 +216,35 @@ export default function AddActivityPage() {
       </button>
 
       <h2 className="text-xl font-bold text-slate-900 mb-1">Add Activities</h2>
-      <p className="text-sm text-slate-400 mb-5">Use voice, a photo, or type it in</p>
+      <p className="text-sm text-slate-400 mb-5">Say it, type it, or snap a photo</p>
 
-      <div className="flex flex-col items-center mb-6">
-        <div className="flex items-center gap-6">
-          <div className="flex flex-col items-center">
-            <button type="button" onClick={handleRecord} disabled={listening || processing} className={`flex h-16 w-16 items-center justify-center rounded-full text-2xl shadow-lg transition-all active:scale-95 ${listening ? "animate-pulse bg-red-500 text-white ring-4 ring-red-200" : processing ? "bg-amber-500 text-white animate-pulse" : "bg-gradient-to-r from-violet-600 via-pink-500 to-amber-400 text-white"}`}>
-              {listening ? "🎤" : processing ? "⏳" : "🎙"}
-            </button>
-            <p className="text-xs text-slate-400 mt-2">{listening ? "Listening…" : processing ? "Processing…" : "Speak"}</p>
-          </div>
+      <div className="mb-6">
+        <div className="flex gap-2 mb-2">
+          <input
+            type="text"
+            value={transcript}
+            onChange={(e) => setTranscript(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleParseVoice(); }}
+            placeholder="e.g. Jane, football, Saturday 3pm"
+            className="min-w-0 flex-1 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-violet-500 focus:outline-none text-sm"
+          />
+          <button type="button" onClick={handleParseVoice} disabled={!transcript.trim() || processing} className="shrink-0 px-4 rounded-xl bg-violet-600 text-white text-sm font-bold disabled:opacity-30">
+            {processing ? "…" : "Fill in"}
+          </button>
+        </div>
+        <p className="text-[11px] text-slate-400 text-center mb-3">Tap the field and use your keyboard&apos;s dictation mic to speak it, or just type</p>
+
+        <div className="flex justify-center">
           <div className="flex flex-col items-center">
             <button type="button" onClick={() => fileInputRef.current?.click()} disabled={photoProcessing} className={`flex h-16 w-16 items-center justify-center rounded-full text-2xl shadow-lg transition-all active:scale-95 ${photoProcessing ? "bg-amber-500 text-white animate-pulse" : "bg-gradient-to-r from-violet-600 via-pink-500 to-amber-400 text-white"}`}>
               {photoProcessing ? "⏳" : "📷"}
             </button>
-            <p className="text-xs text-slate-400 mt-2">{photoProcessing ? "Reading…" : "Photo"}</p>
+            <p className="text-xs text-slate-400 mt-2">{photoProcessing ? "Reading…" : "Or add a photo"}</p>
           </div>
         </div>
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
-        {transcript && <div className="mt-2 bg-violet-50 border border-violet-100 rounded-lg px-3 py-2 text-xs text-violet-700 font-medium text-center max-w-xs">&ldquo;{transcript}&rdquo;</div>}
-        {voiceError && <div className="mt-2 bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-red-600 font-medium text-center max-w-xs">{voiceError}</div>}
-        {photoError && <div className="mt-2 bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-red-600 font-medium text-center max-w-xs">{photoError}</div>}
+        {voiceError && <div className="mt-2 bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-red-600 font-medium text-center max-w-xs mx-auto">{voiceError}</div>}
+        {photoError && <div className="mt-2 bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-red-600 font-medium text-center max-w-xs mx-auto">{photoError}</div>}
       </div>
 
       <div className="space-y-4">
