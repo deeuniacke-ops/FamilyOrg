@@ -56,10 +56,10 @@ export default function HomePage() {
       <span className="rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-bold text-violet-600">Clann</span>
     </div>
 
-    <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+    <div className="mb-3 flex gap-1.5 overflow-x-auto pb-1">
       <button
         onClick={() => setSelectedChildId(null)}
-        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[10px] font-black transition-all ${!selectedChildId ? "bg-violet-100 text-violet-600 ring-2 ring-violet-500" : "bg-slate-100 text-slate-400"}`}
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[9px] font-black transition-all ${!selectedChildId ? "bg-violet-100 text-violet-600 ring-2 ring-violet-500" : "bg-slate-100 text-slate-400"}`}
       >
         All
       </button>
@@ -67,7 +67,7 @@ export default function HomePage() {
         <button
           key={child.id}
           onClick={() => setSelectedChildId(selectedChildId === child.id ? null : child.id)}
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xs font-black text-white transition-all ${selectedChildId === child.id ? "ring-2 ring-offset-2 ring-violet-500" : selectedChildId ? "opacity-40" : ""}`}
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-white transition-all ${selectedChildId === child.id ? "ring-2 ring-offset-1 ring-violet-500" : selectedChildId ? "opacity-40" : ""}`}
           style={{ backgroundColor: child.color }}
         >
           {child.initials}
