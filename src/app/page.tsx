@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Child, FamilyActivity, getActivities, getActivitiesForDates, getChildren } from "@/lib/family-store";
+import InstallPrompt from "@/components/InstallPrompt";
 
 function dateKey(date: Date) { return date.toISOString().slice(0, 10); }
 function addDays(value: string, days: number) {
@@ -48,6 +49,7 @@ export default function HomePage() {
   if (!mounted) return <div className="py-16 text-center text-slate-400 text-sm">Loading…</div>;
 
   return <div className="animate-fade-in">
+    <InstallPrompt />
     <div className="mb-4 flex items-end justify-between">
       <div><h2 className="text-2xl font-black tracking-tight text-slate-900">Activities</h2><p className="text-xs text-slate-500 mt-1">{children.length} family members · Family calendar</p></div>
       <span className="rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-bold text-violet-600">Clann</span>

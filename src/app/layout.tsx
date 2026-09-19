@@ -5,6 +5,12 @@ import FamilyGate from "@/components/FamilyGate";
 export const metadata: Metadata = {
   title: "Clann",
   description: "Family organiser for calendars, routines, activities and family plans",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "Clann",
+    statusBarStyle: "default",
+  },
 };
 
 export const viewport: Viewport = {
