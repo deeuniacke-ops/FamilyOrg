@@ -52,7 +52,7 @@ export default function HomePage() {
   return <div className="animate-fade-in">
     <InstallPrompt />
 
-    <div className="mb-3 flex gap-1.5 overflow-x-auto pb-1">
+    <div className="mb-3 flex gap-1.5 overflow-x-auto p-1 -m-1">
       <button
         onClick={() => setSelectedChildId(null)}
         className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition-all ${!selectedChildId ? "bg-violet-100 text-violet-600 ring-2 ring-violet-500" : "bg-slate-100 text-slate-400"}`}
