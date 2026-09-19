@@ -2,12 +2,12 @@ import firebase from "firebase/app";
 import "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBS9Tpp3dZH_NAuX4S9zLi6q-JCZVitgBs",
-  authDomain: "cluichi-41e2d.firebaseapp.com",
-  projectId: "cluichi-41e2d",
-  storageBucket: "cluichi-41e2d.firebasestorage.app",
-  messagingSenderId: "570707015264",
-  appId: "1:570707015264:web:5347de0f2d3ea453a8f505",
+  apiKey: "AIzaSyA996lW5kmSXQKpx5JW3KN7opQIfn_itDs",
+  authDomain: "clann-d9da7.firebaseapp.com",
+  projectId: "clann-d9da7",
+  storageBucket: "clann-d9da7.firebasestorage.app",
+  messagingSenderId: "474614993760",
+  appId: "1:474614993760:web:dd75321ce5fc1e55bf0405",
 };
 
 if (!firebase.apps.length) {
