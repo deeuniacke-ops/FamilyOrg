@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Child, FamilyActivity, getActivities, getActivitiesForDates, getChildren } from "@/lib/family-store";
 
@@ -31,6 +31,7 @@ export default function HomePage() {
   const [selectedDate, setSelectedDate] = useState(dateKey(new Date()));
   const [view, setView] = useState<"list" | "upcoming">("list");
   const [mounted, setMounted] = useState(false);
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
   const today = dateKey(new Date());
   const listDates = Array.from({ length: 7 }, (_, i) => addDays(selectedDate, i));
@@ -62,6 +63,20 @@ export default function HomePage() {
         <button aria-label="Previous day" onClick={() => setSelectedDate(addDays(selectedDate, -1))} className="h-9 w-9 rounded-xl border border-slate-200 bg-white text-lg font-bold text-slate-500 shadow-sm">‹</button>
         <div className="flex-1 text-center"><p className="text-sm font-black text-slate-800">{dateSummary(selectedDate)}</p><p className="text-[10px] font-medium text-slate-400">{selectedDate === today ? "Today" : ""}</p></div>
         <button aria-label="Next day" onClick={() => setSelectedDate(addDays(selectedDate, 1))} className="h-9 w-9 rounded-xl border border-slate-200 bg-white text-lg font-bold text-slate-500 shadow-sm">›</button>
+        <button
+          aria-label="Pick a date"
+          onClick={() => { try { dateInputRef.current?.showPicker(); } catch { dateInputRef.current?.click(); } }}
+          className="h-9 w-9 rounded-xl border border-slate-200 bg-white text-base text-slate-500 shadow-sm"
+        >
+          📅
+        </button>
+        <input
+          ref={dateInputRef}
+          type="date"
+          value={selectedDate}
+          onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
+          className="absolute h-0 w-0 opacity-0"
+        />
       </div>
       <button onClick={() => setSelectedDate(today)} className="mb-3 w-full rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-[10px] font-bold text-violet-700">
         Today · {new Date(today + "T12:00:00").toLocaleDateString("en-IE", { weekday: "long", day: "numeric", month: "short" })}
