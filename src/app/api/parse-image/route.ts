@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       const childrenList = children.map((child) => `- ${child.name} (id: ${child.id})`).join("\n") || "No family members registered";
 
       const response = await client.messages.create({
-        model: process.env.ANTHROPIC_MODEL || "claude-3-5-haiku-20241022",
+        model: process.env.ANTHROPIC_MODEL || "claude-haiku-4-5",
         max_tokens: 512,
         system: SYSTEM_PROMPT.replace("{{TODAY}}", today).replace("{{CHILDREN}}", childrenList),
         messages: [
