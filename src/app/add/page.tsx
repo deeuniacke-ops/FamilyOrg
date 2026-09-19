@@ -237,7 +237,7 @@ export default function AddActivityPage() {
             <p className="text-xs text-slate-400 mt-2">{photoProcessing ? "Reading…" : "Photo"}</p>
           </div>
         </div>
-        <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoChange} className="hidden" />
+        <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
         {transcript && <div className="mt-2 bg-violet-50 border border-violet-100 rounded-lg px-3 py-2 text-xs text-violet-700 font-medium text-center max-w-xs">&ldquo;{transcript}&rdquo;</div>}
         {voiceError && <div className="mt-2 bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-red-600 font-medium text-center max-w-xs">{voiceError}</div>}
         {photoError && <div className="mt-2 bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-red-600 font-medium text-center max-w-xs">{photoError}</div>}
