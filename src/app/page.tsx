@@ -48,7 +48,7 @@ export default function HomePage() {
 
   return <div className="animate-fade-in">
     <div className="mb-4 flex items-end justify-between">
-      <div><h2 className="text-2xl font-black tracking-tight text-slate-900">Activities</h2><p className="text-xs text-slate-500 mt-1">{children.length} children · Family calendar</p></div>
+      <div><h2 className="text-2xl font-black tracking-tight text-slate-900">Activities</h2><p className="text-xs text-slate-500 mt-1">{children.length} family members · Family calendar</p></div>
       <span className="rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-bold text-violet-600">Clann</span>
     </div>
 

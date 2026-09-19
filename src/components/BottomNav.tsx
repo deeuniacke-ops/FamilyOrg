@@ -40,7 +40,7 @@ export default function BottomNav() {
           <span className="mt-1 text-xs font-bold text-violet-600">Add</span>
         </Link>
 
-        {/* Children */}
+        {/* Family */}
         <Link
           href="/manage"
           className={`flex min-w-0 flex-1 flex-col items-center py-2 text-xs font-bold ${
@@ -48,7 +48,7 @@ export default function BottomNav() {
           }`}
         >
           <span className="text-xl leading-5">●</span>
-          <span className="mt-0.5 truncate">Children</span>
+          <span className="mt-0.5 truncate">Family</span>
         </Link>
       </div>
     </nav>

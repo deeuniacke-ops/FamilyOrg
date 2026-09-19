@@ -89,8 +89,8 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
       </p>
 
       <div className="rounded-2xl border-2 border-gray-100 bg-white p-4 shadow-card">
-        {/* Child picker */}
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Child</p>
+        {/* Family member picker */}
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Family Member</p>
         <div className="flex flex-wrap gap-2 mb-3">
           {children.map((c) => (
             <button key={c.id} type="button" onClick={() => setChildId(c.id)} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${childId === c.id ? "ring-2 ring-violet-500 bg-white shadow" : "bg-gray-100 text-slate-500"}`}>

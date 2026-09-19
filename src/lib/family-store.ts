@@ -1,10 +1,10 @@
 import { db } from "./firebase";
-import { collection, doc, onSnapshot, setDoc, deleteDoc, writeBatch } from "firebase/firestore";
+import { collection, doc, onSnapshot, setDoc, deleteDoc, deleteField, writeBatch } from "firebase/firestore";
 
 export type Child = {
   id: string;
   name: string;
-  age: number;
+  age?: number;
   initials: string;
   color: string;
 };
@@ -39,11 +39,19 @@ function set(key: string, value: unknown) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* ignore */ }
 }
 
-/** Strip undefined values — Firestore rejects them */
+/** For full-document creation — Firestore rejects undefined values outright */
 function clean<T extends object>(obj: T): T {
   const copy = { ...obj } as Record<string, unknown>;
   Object.keys(copy).forEach((k) => { if (copy[k] === undefined) delete copy[k]; });
   return copy as T;
+}
+
+/** For merge updates — undefined means "clear this field", which Firestore
+ *  only does via an explicit deleteField() sentinel, not by omitting the key */
+function cleanForUpdate<T extends object>(obj: T): Record<string, unknown> {
+  const copy = { ...obj } as Record<string, unknown>;
+  Object.keys(copy).forEach((k) => { if (copy[k] === undefined) copy[k] = deleteField(); });
+  return copy;
 }
 
 function fsWrite(run: () => Promise<unknown>) { run().catch(() => { /* offline: local cache still updated */ }); }
@@ -137,7 +145,7 @@ export function addChild(input: Omit<Child, "id">): Child {
 export function updateChild(id: string, updates: Partial<Omit<Child, "id">>) {
   childrenCache = childrenCache.map((child) => child.id === id ? { ...child, ...updates } : child);
   set(CHILDREN_KEY, childrenCache);
-  fsWrite(() => setDoc(childDoc(id), clean(updates), { merge: true }));
+  fsWrite(() => setDoc(childDoc(id), cleanForUpdate(updates), { merge: true }));
 }
 export function removeChild(id: string) {
   const orphanedActivityIds = activitiesCache.filter((activity) => activity.childId === id).map((a) => a.id);
@@ -164,7 +172,7 @@ export function addActivity(input: Omit<FamilyActivity, "id">): FamilyActivity {
 export function updateActivity(id: string, updates: Partial<Omit<FamilyActivity, "id">>) {
   activitiesCache = activitiesCache.map((activity) => activity.id === id ? { ...activity, ...updates } : activity);
   set(ACTIVITIES_KEY, activitiesCache);
-  fsWrite(() => setDoc(activityDoc(id), clean(updates), { merge: true }));
+  fsWrite(() => setDoc(activityDoc(id), cleanForUpdate(updates), { merge: true }));
 }
 export function removeActivity(id: string) {
   activitiesCache = activitiesCache.filter((activity) => activity.id !== id);

@@ -209,7 +209,7 @@ function ActivityCard({ draft, index, children, total, onUpdate, onRemove }: {
           </button>
         ))}
       </div>
-      {!draft.childId && <p className="text-[10px] text-red-400 mb-2">Pick a child</p>}
+      {!draft.childId && <p className="text-[10px] text-red-400 mb-2">Pick a family member</p>}
 
       <input type="text" value={draft.title} onChange={(e) => onUpdate("title", e.target.value)} placeholder="Activity name" className="w-full mb-3 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-violet-500 focus:outline-none text-sm" />
 
