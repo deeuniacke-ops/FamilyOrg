@@ -19,8 +19,16 @@ export type FamilyActivity = {
   location?: string;
   notes?: string;
   recurring?: "weekly";
-  owner?: string;
+  owner?: string[];
+  collector?: string[];
 };
+
+/** Older activities stored owner as a single string - normalize on read */
+function normalizeOwner(raw: unknown): string[] | undefined {
+  if (Array.isArray(raw)) return raw as string[];
+  if (typeof raw === "string" && raw) return [raw];
+  return undefined;
+}
 
 const FAMILY_NAME_KEY = "familyorg_family_name";
 const CHILDREN_KEY = "familyorg_children";
@@ -92,7 +100,7 @@ export function initFamilySync(familyId: string, seedDisplayName?: string) {
 
   if (get(CACHE_OWNER_KEY, "") === familyId) {
     childrenCache = get(CHILDREN_KEY, []);
-    activitiesCache = get(ACTIVITIES_KEY, []);
+    activitiesCache = get<FamilyActivity[]>(ACTIVITIES_KEY, []).map((a) => ({ ...a, owner: normalizeOwner(a.owner) }));
     familyNameCache = get(FAMILY_NAME_KEY, "");
   } else {
     childrenCache = [];
@@ -111,7 +119,10 @@ export function initFamilySync(familyId: string, seedDisplayName?: string) {
     notify();
   }));
   unsubscribers.push(onSnapshot(activitiesCol(), (snapshot) => {
-    activitiesCache = snapshot.docs.map((d) => d.data() as FamilyActivity);
+    activitiesCache = snapshot.docs.map((d) => {
+      const data = d.data() as FamilyActivity;
+      return { ...data, owner: normalizeOwner(data.owner) };
+    });
     set(ACTIVITIES_KEY, activitiesCache);
     notify();
   }));

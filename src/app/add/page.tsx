@@ -43,11 +43,13 @@ type DraftActivity = {
   duration: number;
   location: string;
   recurring: boolean;
-  owner: string;
+  owner: string[];
+  collector: string[];
+  notes: string;
 };
 
 function emptyDraft(): DraftActivity {
-  return { key: Date.now(), childId: "", title: "", date: todayStr(), time: "10:00", duration: 60, location: "", recurring: false, owner: "" };
+  return { key: Date.now(), childId: "", title: "", date: todayStr(), time: "10:00", duration: 60, location: "", recurring: false, owner: [], collector: [], notes: "" };
 }
 
 export default function AddActivityPage() {
@@ -67,11 +69,14 @@ export default function AddActivityPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setChildren(getChildren());
+    const refresh = () => setChildren(getChildren());
+    refresh();
     setMounted(true);
+    window.addEventListener("family-sync", refresh);
+    return () => window.removeEventListener("family-sync", refresh);
   }, []);
 
-  const updateDraft = (key: number, field: keyof DraftActivity, value: string | number | boolean) => {
+  const updateDraft = (key: number, field: keyof DraftActivity, value: string | number | boolean | string[]) => {
     setDrafts((prev) => prev.map((d) => (d.key === key ? { ...d, [field]: value } : d)));
   };
 
@@ -95,7 +100,9 @@ export default function AddActivityPage() {
         duration: a.durationMinutes || 60,
         location: a.location || "",
         recurring: false,
-        owner: "",
+        owner: [],
+        collector: [],
+        notes: "",
       }));
   };
 
@@ -202,7 +209,9 @@ export default function AddActivityPage() {
         durationMinutes: d.duration,
         location: d.location.trim() || undefined,
         recurring: d.recurring ? "weekly" : undefined,
-        owner: d.owner.trim() || undefined,
+        owner: d.owner.length ? d.owner : undefined,
+        collector: d.collector.length ? d.collector : undefined,
+        notes: d.notes.trim() || undefined,
       });
     }
     router.push("/");
@@ -278,8 +287,15 @@ export default function AddActivityPage() {
 
 function ActivityCard({ draft, index, children, total, onUpdate, onRemove }: {
   draft: DraftActivity; index: number; children: Child[]; total: number;
-  onUpdate: (field: keyof DraftActivity, value: string | number | boolean) => void; onRemove: () => void;
+  onUpdate: (field: keyof DraftActivity, value: string | number | boolean | string[]) => void; onRemove: () => void;
 }) {
+  const [showCollector, setShowCollector] = useState(draft.collector.length > 0);
+  const toggleOwner = (o: string) => {
+    onUpdate("owner", draft.owner.includes(o) ? draft.owner.filter((x) => x !== o) : [...draft.owner, o]);
+  };
+  const toggleCollector = (o: string) => {
+    onUpdate("collector", draft.collector.includes(o) ? draft.collector.filter((x) => x !== o) : [...draft.collector, o]);
+  };
   return (
     <div className="rounded-2xl border-2 border-gray-100 bg-white p-4 shadow-card animate-slide-up">
       <div className="flex items-center justify-between mb-3">
@@ -316,15 +332,43 @@ function ActivityCard({ draft, index, children, total, onUpdate, onRemove }: {
 
       {/* Owner picker */}
       <div className="mb-3">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Who&apos;s bringing them?</p>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Who&apos;s bringing them? (pick any that apply)</p>
         <div className="flex flex-wrap gap-1.5">
           {OWNERS.map((o) => (
-            <button key={o} type="button" onClick={() => onUpdate("owner", draft.owner === o ? "" : o)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${draft.owner === o ? "bg-pink-500 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
+            <button key={o} type="button" onClick={() => toggleOwner(o)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${draft.owner.includes(o) ? "bg-pink-500 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
               {o}
             </button>
           ))}
         </div>
       </div>
+
+      {/* Collector (collapsed unless different from who's bringing them) */}
+      {!showCollector && (
+        <button type="button" onClick={() => setShowCollector(true)} className="mb-3 text-xs font-bold text-violet-500">
+          + Someone else collecting them?
+        </button>
+      )}
+      {showCollector && (
+        <div className="mb-3">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Who&apos;s collecting them?</p>
+          <div className="flex flex-wrap gap-1.5">
+            {OWNERS.map((o) => (
+              <button key={o} type="button" onClick={() => toggleCollector(o)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${draft.collector.includes(o) ? "bg-pink-500 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
+                {o}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Notes */}
+      <textarea
+        value={draft.notes}
+        onChange={(e) => onUpdate("notes", e.target.value)}
+        placeholder="Notes (optional) — e.g. bring shin pads, entrance around the back"
+        rows={2}
+        className="w-full mb-3 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-violet-500 focus:outline-none text-sm resize-none"
+      />
 
       {/* Recurring toggle */}
       <button type="button" onClick={() => onUpdate("recurring", !draft.recurring)} className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all ${draft.recurring ? "bg-violet-100 text-violet-600 border-2 border-violet-300" : "bg-gray-50 text-slate-400 border-2 border-gray-200"}`}>

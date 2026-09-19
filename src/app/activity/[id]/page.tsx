@@ -25,7 +25,10 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
   const [duration, setDuration] = useState(60);
   const [location, setLocation] = useState("");
   const [recurring, setRecurring] = useState(false);
-  const [owner, setOwner] = useState("");
+  const [owner, setOwner] = useState<string[]>([]);
+  const [collector, setCollector] = useState<string[]>([]);
+  const [showCollector, setShowCollector] = useState(false);
+  const [notes, setNotes] = useState("");
 
   useEffect(() => {
     const kids = getChildren();
@@ -41,9 +44,15 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
       setDuration(found.durationMinutes);
       setLocation(found.location || "");
       setRecurring(found.recurring === "weekly");
-      setOwner(found.owner || "");
+      setOwner(found.owner || []);
+      setCollector(found.collector || []);
+      setShowCollector(!!found.collector?.length);
+      setNotes(found.notes || "");
     }
     setMounted(true);
+    const refreshChildren = () => setChildren(getChildren());
+    window.addEventListener("family-sync", refreshChildren);
+    return () => window.removeEventListener("family-sync", refreshChildren);
   }, [id]);
 
   const handleSave = () => {
@@ -56,7 +65,9 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
       durationMinutes: duration,
       location: location.trim() || undefined,
       recurring: recurring ? "weekly" : undefined,
-      owner: owner.trim() || undefined,
+      owner: owner.length ? owner : undefined,
+      collector: collector.length ? collector : undefined,
+      notes: notes.trim() || undefined,
     });
     router.back();
   };
@@ -123,15 +134,43 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
 
         {/* Owner picker */}
         <div className="mb-3">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Who&apos;s bringing them?</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Who&apos;s bringing them? (pick any that apply)</p>
           <div className="flex flex-wrap gap-1.5">
             {OWNERS.map((o) => (
-              <button key={o} type="button" onClick={() => setOwner(owner === o ? "" : o)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${owner === o ? "bg-pink-500 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
+              <button key={o} type="button" onClick={() => setOwner((prev) => prev.includes(o) ? prev.filter((x) => x !== o) : [...prev, o])} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${owner.includes(o) ? "bg-pink-500 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
                 {o}
               </button>
             ))}
           </div>
         </div>
+
+        {/* Collector (collapsed unless already set) */}
+        {!showCollector && (
+          <button type="button" onClick={() => setShowCollector(true)} className="mb-3 text-xs font-bold text-violet-500">
+            + Someone else collecting them?
+          </button>
+        )}
+        {showCollector && (
+          <div className="mb-3">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Who&apos;s collecting them?</p>
+            <div className="flex flex-wrap gap-1.5">
+              {OWNERS.map((o) => (
+                <button key={o} type="button" onClick={() => setCollector((prev) => prev.includes(o) ? prev.filter((x) => x !== o) : [...prev, o])} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${collector.includes(o) ? "bg-pink-500 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
+                  {o}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Notes */}
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Notes (optional) — e.g. bring shin pads, entrance around the back"
+          rows={2}
+          className="w-full mb-3 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-violet-500 focus:outline-none text-sm resize-none"
+        />
 
         {/* Recurring toggle */}
         <button type="button" onClick={() => setRecurring(!recurring)} className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all ${recurring ? "bg-violet-100 text-violet-600 border-2 border-violet-300" : "bg-gray-50 text-slate-400 border-2 border-gray-200"}`}>

@@ -105,8 +105,10 @@ export default function HomePage() {
                     <p className="truncate text-sm font-bold text-slate-900">{activity.title}</p>
                     <p className="text-xs text-slate-500">{child?.name} · {timeLabel(activity.time)} · {activity.durationMinutes}m</p>
                     {activity.location && <p className="text-[11px] text-slate-400">📍 {activity.location}</p>}
-                    {activity.owner && <p className="text-[10px] font-bold text-pink-500">👤 {activity.owner}</p>}
+                    {!!activity.owner?.length && <p className="text-[10px] font-bold text-pink-500">👤 {activity.owner.join(", ")}</p>}
+                    {!!activity.collector?.length && <p className="text-[10px] font-bold text-amber-600">🚗 {activity.collector.join(", ")}</p>}
                     {activity.recurring === "weekly" && <p className="text-[10px] font-bold text-violet-500">🔁 Weekly</p>}
+                    {activity.notes && <p className="text-[10px] font-bold text-slate-400">📝 Note</p>}
                   </div>
                   <div className="shrink-0 text-right">
                     <p className="text-sm font-black text-slate-700">{activity.time}</p>
@@ -150,8 +152,10 @@ export default function HomePage() {
                     <p className="text-xs text-slate-500">{child?.name} · {dayLabel(activity.date)}</p>
                     <p className="text-xs text-slate-400">{timeLabel(activity.time)} · {activity.durationMinutes}m</p>
                     {activity.location && <p className="text-[11px] text-slate-400">📍 {activity.location}</p>}
-                    {activity.owner && <p className="text-[10px] font-bold text-pink-500">👤 {activity.owner}</p>}
+                    {!!activity.owner?.length && <p className="text-[10px] font-bold text-pink-500">👤 {activity.owner.join(", ")}</p>}
+                    {!!activity.collector?.length && <p className="text-[10px] font-bold text-amber-600">🚗 {activity.collector.join(", ")}</p>}
                     {activity.recurring === "weekly" && <p className="text-[10px] font-bold text-violet-500">🔁 Weekly</p>}
+                    {activity.notes && <p className="text-[10px] font-bold text-slate-400">📝 Note</p>}
                   </div>
                   <div className="shrink-0 text-right">
                     <p className="text-xs font-bold text-slate-600">{new Date(activity.date + "T12:00:00").toLocaleDateString("en-IE", { day: "numeric", month: "short" })}</p>
