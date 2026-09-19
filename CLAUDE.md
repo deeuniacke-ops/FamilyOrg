@@ -29,29 +29,48 @@ A family organiser PWA for managing children's activities, schedules, and weeken
 src/
   app/
     page.tsx          — Home: 3-day calendar with timeline, clash detection
-    layout.tsx        — Root layout with Header, BottomNav, Toast
-    manage/page.tsx   — Manage children and their activities
+    layout.tsx        — Root layout, just renders <FamilyGate>
+    manage/page.tsx   — Manage children, activities, family name, and "leave family"
     add/page.tsx      — Add activity (with voice input option)
     api/parse-voice/  — Claude API route for smart voice parsing
     globals.css       — Tailwind + custom utilities
   components/
+    FamilyGate.tsx    — Join screen (family name + passphrase) gating the whole app; renders Header/BottomNav/Toast once joined
     BottomNav.tsx     — Fixed bottom nav: Activities, Children, + Add
-    Header.tsx        — Top header with gradient
+    Header.tsx        — Top header with gradient, shows the family's display name
     Toast.tsx         — Toast notification system
     VoiceRecordButton.tsx — Voice recording (legacy, may be unused)
   lib/
     firebase.ts       — Firestore client init (project clann-d9da7)
-    family-store.ts   — Firestore-backed CRUD for children & activities, with localStorage cache and cross-device live sync via onSnapshot + a "family-sync" window event
+    family-id.ts       — Derives a family's namespace ID (SHA-256 of name+passphrase) and stores it in localStorage; leaveFamily() clears it
+    family-store.ts   — Firestore-backed CRUD for children & activities, scoped to families/{familyId}; localStorage cache + cross-device live sync via onSnapshot + a "family-sync" window event. Must call initFamilySync(familyId) before any other function is used
     voice-parser.ts   — Local keyword fallback parser (no API needed)
     themes.ts         — Theme/colour definitions
 ```
 
+## Multi-family model — no real accounts, no login page
+Multiple independent families (e.g. two different households) share the
+same deployed app with **completely separate data**, without any real
+authentication system:
+- On first load, `FamilyGate` asks for a **family name + shared passphrase**
+- `familyId = SHA256(name.toLowerCase() + "::" + passphrase)` (see `family-id.ts`)
+- All Firestore reads/writes for that browser go to `families/{familyId}/...`
+- The ID is stored in localStorage so the device only asks once
+- Anyone who enters the same name+passphrase joins the same family; anyone
+  else gets a distinct, empty family space
+- There is **no password reset, no server-side account list, no per-user
+  identity** — security is "you can't derive the ID without knowing the
+  secret." That's an intentional, appropriate tradeoff for a small
+  personal app shared between trusted households, not real auth.
+- New/empty families start with genuinely no children or activities — there's
+  no demo data seeding anymore (removed because it made no sense once
+  multiple unrelated families exist)
+
 ## Data model (Firestore, project `clann-d9da7`)
-- **children** collection: `{ id, name, age, initials, color }`
-- **activities** collection: `{ id, childId, title, date, time, durationMinutes, location?, notes?, recurring?, owner? }`
-- **settings/family** doc: `{ name }` — the family name shown in the header
-- Firestore rules (`firestore.rules`) allow open read/write — there's no auth system, it's a shared family app
-- Demo data: Emma-Louise (12), Aedy (10), Jane (8) with sample weekend activities (used as fallback before first Firestore snapshot arrives)
+- `families/{familyId}/children/{childId}`: `{ id, name, age, initials, color }`
+- `families/{familyId}/activities/{activityId}`: `{ id, childId, title, date, time, durationMinutes, location?, notes?, recurring?, owner? }`
+- `families/{familyId}/settings/family`: `{ name }` — the family name shown in the header
+- Firestore rules (`firestore.rules`) allow open read/write **within** a given `familyId` path — there's no per-user auth, isolation comes entirely from not knowing another family's ID
 
 ## Design
 - **Colour scheme**: violet-pink-amber gradient (`#8b5cf6` → `#ec4899` → `#f59e0b`)

@@ -2,34 +2,37 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Children ──
-    match /children/{childId} {
-      allow read: if true;
-      allow create, update: if
-        request.resource.data.keys().hasAll(['name']) &&
-        request.resource.data.name is string &&
-        request.resource.data.name.size() > 0 &&
-        request.resource.data.name.size() < 100;
-      allow delete: if true;
-    }
+    // Each family's data lives under families/{familyId}, where familyId is
+    // a hash of a name+passphrase only that family's members know. There's
+    // no per-user auth — knowing the ID is what "authenticates" you.
+    match /families/{familyId} {
 
-    // ── Activities ──
-    match /activities/{activityId} {
-      allow read: if true;
-      allow create, update: if
-        request.resource.data.keys().hasAll(['childId', 'title', 'date', 'time']) &&
-        request.resource.data.title is string &&
-        request.resource.data.title.size() > 0 &&
-        request.resource.data.title.size() < 200;
-      allow delete: if true;
-    }
+      match /children/{childId} {
+        allow read: if true;
+        allow create, update: if
+          request.resource.data.keys().hasAll(['name']) &&
+          request.resource.data.name is string &&
+          request.resource.data.name.size() > 0 &&
+          request.resource.data.name.size() < 100;
+        allow delete: if true;
+      }
 
-    // ── Settings (family name) ──
-    match /settings/{docId} {
-      allow read: if true;
-      allow write: if
-        request.resource.data.size() < 10 &&
-        docId in ['family'];
+      match /activities/{activityId} {
+        allow read: if true;
+        allow create, update: if
+          request.resource.data.keys().hasAll(['childId', 'title', 'date', 'time']) &&
+          request.resource.data.title is string &&
+          request.resource.data.title.size() > 0 &&
+          request.resource.data.title.size() < 200;
+        allow delete: if true;
+      }
+
+      match /settings/{docId} {
+        allow read: if true;
+        allow write: if
+          request.resource.data.size() < 10 &&
+          docId in ['family'];
+      }
     }
 
     // ── Block everything else ──

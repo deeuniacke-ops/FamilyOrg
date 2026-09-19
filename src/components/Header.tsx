@@ -6,7 +6,13 @@ import { getFamilyName } from "@/lib/family-store";
 export default function Header() {
   const [mounted, setMounted] = useState(false);
   const [familyName, setFamilyName] = useState("");
-  useEffect(() => { setFamilyName(getFamilyName()); setMounted(true); }, []);
+  useEffect(() => {
+    const refresh = () => setFamilyName(getFamilyName());
+    refresh();
+    setMounted(true);
+    window.addEventListener("family-sync", refresh);
+    return () => window.removeEventListener("family-sync", refresh);
+  }, []);
 
   return (
     <header className="sticky top-0 z-40 bg-gradient-to-r from-violet-600 via-pink-500 to-amber-400 px-5 pt-[env(safe-area-inset-top)] text-white shadow-md">

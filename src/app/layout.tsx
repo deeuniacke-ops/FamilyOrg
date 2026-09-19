@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import BottomNav from "@/components/BottomNav";
-import Header from "@/components/Header";
-import Toast from "@/components/Toast";
+import FamilyGate from "@/components/FamilyGate";
 
 export const metadata: Metadata = {
   title: "Clann",
@@ -21,12 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <div className="min-h-screen max-w-lg mx-auto pb-safe">
-          <Header />
-          <main className="px-4 py-4">{children}</main>
-        </div>
-        <BottomNav />
-        <Toast />
+        <FamilyGate>{children}</FamilyGate>
       </body>
     </html>
   );

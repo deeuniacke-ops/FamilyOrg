@@ -25,37 +25,9 @@ export type FamilyActivity = {
 const FAMILY_NAME_KEY = "familyorg_family_name";
 const CHILDREN_KEY = "familyorg_children";
 const ACTIVITIES_KEY = "familyorg_activities";
+const CACHE_OWNER_KEY = "familyorg_cache_owner"; // which familyId the cached keys above belong to
 
 const colours = ["#d9468b", "#42b883", "#7554c7", "#e68a35", "#2f80c0", "#db4f4f"];
-
-function dateForNextSaturday(): string {
-  const d = new Date();
-  const days = (6 - d.getDay() + 7) % 7 || 7;
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
-function addDays(date: string, amount: number): string {
-  const d = new Date(date + "T12:00:00");
-  d.setDate(d.getDate() + amount);
-  return d.toISOString().slice(0, 10);
-}
-
-export const demoChildren: Child[] = [
-  { id: "child-emma", name: "Emma-Louise", age: 12, initials: "EL", color: colours[0] },
-  { id: "child-aedy", name: "Aedy", age: 10, initials: "AD", color: colours[1] },
-  { id: "child-jane", name: "Jane", age: 8, initials: "JA", color: colours[2] },
-];
-
-const saturday = dateForNextSaturday();
-export const demoActivities: FamilyActivity[] = [
-  { id: "activity-1", childId: "child-emma", title: "Hockey Training", date: saturday, time: "10:00", durationMinutes: 120 },
-  { id: "activity-2", childId: "child-aedy", title: "Football Training", date: saturday, time: "10:00", durationMinutes: 90 },
-  { id: "activity-3", childId: "child-jane", title: "Horse Riding", date: saturday, time: "10:00", durationMinutes: 60 },
-  { id: "activity-4", childId: "child-emma", title: "Hockey Match", date: addDays(saturday, 1), time: "10:00", durationMinutes: 120 },
-  { id: "activity-5", childId: "child-aedy", title: "Football Match", date: addDays(saturday, 1), time: "14:00", durationMinutes: 90 },
-  { id: "activity-6", childId: "child-jane", title: "Horse Riding", date: addDays(saturday, 1), time: "11:30", durationMinutes: 60 },
-];
 
 function get<T>(key: string, fallback: T): T {
   try {
@@ -76,54 +48,82 @@ function clean<T extends object>(obj: T): T {
 
 function fsWrite(run: () => Promise<unknown>) { run().catch(() => { /* offline: local cache still updated */ }); }
 
-// In-memory cache, seeded from localStorage for an instant first paint,
-// then kept live by Firestore so every device sees the same data.
-let familyNameCache: string = get(FAMILY_NAME_KEY, "Uniacke");
-let childrenCache: Child[] = get(CHILDREN_KEY, demoChildren);
-let activitiesCache: FamilyActivity[] = get(ACTIVITIES_KEY, demoActivities);
-
 function notify() {
   if (typeof window !== "undefined") window.dispatchEvent(new Event("family-sync"));
 }
 
-let seededDemoData = false;
+// In-memory cache, mirrored to localStorage for an instant repaint on
+// reload, and kept live by Firestore so every device in the family sees
+// the same data. Scoped under families/{activeFamilyId} — see initFamilySync.
+let activeFamilyId: string | null = null;
+let unsubscribers: Array<() => void> = [];
+let familyNameCache = "";
+let childrenCache: Child[] = [];
+let activitiesCache: FamilyActivity[] = [];
 
-if (typeof window !== "undefined") {
-  onSnapshot(collection(db, "children"), (snapshot) => {
-    if (snapshot.empty && !seededDemoData) {
-      seededDemoData = true;
-      fsWrite(async () => {
-        const batch = writeBatch(db);
-        demoChildren.forEach((child) => batch.set(doc(db, "children", child.id), clean(child)));
-        demoActivities.forEach((activity) => batch.set(doc(db, "activities", activity.id), clean(activity)));
-        await batch.commit();
-      });
-      return; // keep showing the local demo fallback until the seed write echoes back
-    }
+function requireFamilyId(): string {
+  if (!activeFamilyId) throw new Error("family-store used before initFamilySync() completed");
+  return activeFamilyId;
+}
+function childrenCol() { return collection(db, "families", requireFamilyId(), "children"); }
+function activitiesCol() { return collection(db, "families", requireFamilyId(), "activities"); }
+function childDoc(id: string) { return doc(db, "families", requireFamilyId(), "children", id); }
+function activityDoc(id: string) { return doc(db, "families", requireFamilyId(), "activities", id); }
+function familySettingsDoc() { return doc(db, "families", requireFamilyId(), "settings", "family"); }
+
+/**
+ * Starts (or switches) live sync for a family's namespace. `seedDisplayName`
+ * is only used the first time a brand-new family space is created, to give
+ * it an initial header name instead of a blank one.
+ */
+export function initFamilySync(familyId: string, seedDisplayName?: string) {
+  if (activeFamilyId === familyId) return;
+  unsubscribers.forEach((unsubscribe) => unsubscribe());
+  unsubscribers = [];
+  activeFamilyId = familyId;
+
+  if (get(CACHE_OWNER_KEY, "") === familyId) {
+    childrenCache = get(CHILDREN_KEY, []);
+    activitiesCache = get(ACTIVITIES_KEY, []);
+    familyNameCache = get(FAMILY_NAME_KEY, "");
+  } else {
+    childrenCache = [];
+    activitiesCache = [];
+    familyNameCache = "";
+    set(CACHE_OWNER_KEY, familyId);
+    set(CHILDREN_KEY, []);
+    set(ACTIVITIES_KEY, []);
+    set(FAMILY_NAME_KEY, "");
+  }
+  notify();
+
+  unsubscribers.push(onSnapshot(childrenCol(), (snapshot) => {
     childrenCache = snapshot.docs.map((d) => d.data() as Child);
     set(CHILDREN_KEY, childrenCache);
     notify();
-  });
-  onSnapshot(collection(db, "activities"), (snapshot) => {
+  }));
+  unsubscribers.push(onSnapshot(activitiesCol(), (snapshot) => {
     activitiesCache = snapshot.docs.map((d) => d.data() as FamilyActivity);
     set(ACTIVITIES_KEY, activitiesCache);
     notify();
-  });
-  onSnapshot(doc(db, "settings", "family"), (snapshot) => {
+  }));
+  unsubscribers.push(onSnapshot(familySettingsDoc(), (snapshot) => {
     const name = snapshot.data()?.name;
     if (typeof name === "string") {
       familyNameCache = name;
       set(FAMILY_NAME_KEY, name);
       notify();
+    } else if (seedDisplayName && !snapshot.exists()) {
+      fsWrite(() => setDoc(familySettingsDoc(), { name: seedDisplayName }, { merge: true }));
     }
-  });
+  }));
 }
 
 export function getFamilyName(): string { return familyNameCache; }
 export function setFamilyName(name: string) {
   familyNameCache = name;
   set(FAMILY_NAME_KEY, name);
-  fsWrite(() => setDoc(doc(db, "settings", "family"), { name }, { merge: true }));
+  fsWrite(() => setDoc(familySettingsDoc(), { name }, { merge: true }));
 }
 
 export function getChildren(): Child[] { return childrenCache; }
@@ -131,13 +131,13 @@ export function addChild(input: Omit<Child, "id">): Child {
   const child = { ...input, id: `child-${Date.now()}` };
   childrenCache = [...childrenCache, child];
   set(CHILDREN_KEY, childrenCache);
-  fsWrite(() => setDoc(doc(db, "children", child.id), clean(child)));
+  fsWrite(() => setDoc(childDoc(child.id), clean(child)));
   return child;
 }
 export function updateChild(id: string, updates: Partial<Omit<Child, "id">>) {
   childrenCache = childrenCache.map((child) => child.id === id ? { ...child, ...updates } : child);
   set(CHILDREN_KEY, childrenCache);
-  fsWrite(() => setDoc(doc(db, "children", id), clean(updates), { merge: true }));
+  fsWrite(() => setDoc(childDoc(id), clean(updates), { merge: true }));
 }
 export function removeChild(id: string) {
   const orphanedActivityIds = activitiesCache.filter((activity) => activity.childId === id).map((a) => a.id);
@@ -147,8 +147,8 @@ export function removeChild(id: string) {
   set(ACTIVITIES_KEY, activitiesCache);
   fsWrite(async () => {
     const batch = writeBatch(db);
-    batch.delete(doc(db, "children", id));
-    orphanedActivityIds.forEach((activityId) => batch.delete(doc(db, "activities", activityId)));
+    batch.delete(childDoc(id));
+    orphanedActivityIds.forEach((activityId) => batch.delete(activityDoc(activityId)));
     await batch.commit();
   });
 }
@@ -158,18 +158,18 @@ export function addActivity(input: Omit<FamilyActivity, "id">): FamilyActivity {
   const activity = { ...input, id: `activity-${Date.now()}`, durationMinutes: input.durationMinutes || 60 };
   activitiesCache = [...activitiesCache, activity];
   set(ACTIVITIES_KEY, activitiesCache);
-  fsWrite(() => setDoc(doc(db, "activities", activity.id), clean(activity)));
+  fsWrite(() => setDoc(activityDoc(activity.id), clean(activity)));
   return activity;
 }
 export function updateActivity(id: string, updates: Partial<Omit<FamilyActivity, "id">>) {
   activitiesCache = activitiesCache.map((activity) => activity.id === id ? { ...activity, ...updates } : activity);
   set(ACTIVITIES_KEY, activitiesCache);
-  fsWrite(() => setDoc(doc(db, "activities", id), clean(updates), { merge: true }));
+  fsWrite(() => setDoc(activityDoc(id), clean(updates), { merge: true }));
 }
 export function removeActivity(id: string) {
   activitiesCache = activitiesCache.filter((activity) => activity.id !== id);
   set(ACTIVITIES_KEY, activitiesCache);
-  fsWrite(() => deleteDoc(doc(db, "activities", id)));
+  fsWrite(() => deleteDoc(activityDoc(id)));
 }
 
 /** Return activities for a set of dates, expanding weekly recurring ones */
