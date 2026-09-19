@@ -18,7 +18,7 @@ export default function Icon() {
         }}
       >
         <span style={{ fontSize: 300, fontWeight: 800, color: "white", lineHeight: 1 }}>
-          U
+          C
         </span>
       </div>
     ),

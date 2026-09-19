@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { deriveFamilyId, getStoredFamilyId, storeFamilyId } from "@/lib/family-id";
-import { initFamilySync } from "@/lib/family-store";
+import { getFamilyName, initFamilySync } from "@/lib/family-store";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import Toast from "@/components/Toast";
@@ -24,6 +24,22 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
       setReady(true);
     }
   }, []);
+
+  // The installed home-screen icon should show the family's own initial,
+  // not a fixed letter - swap the manifest/apple-touch-icon links to a
+  // per-family generated icon once we know the family's name.
+  useEffect(() => {
+    if (!ready) return;
+    const updateInstallIcons = () => {
+      const match = getFamilyName().trim().match(/[a-zA-Z]/);
+      const letter = match ? match[0].toUpperCase() : "C";
+      document.querySelector('link[rel="manifest"]')?.setAttribute("href", `/api/family-manifest/${letter}`);
+      document.querySelector('link[rel="apple-touch-icon"]')?.setAttribute("href", `/api/family-icon/${letter}/192`);
+    };
+    updateInstallIcons();
+    window.addEventListener("family-sync", updateInstallIcons);
+    return () => window.removeEventListener("family-sync", updateInstallIcons);
+  }, [ready]);
 
   const completeJoin = (id: string, seedName?: string) => {
     setJoining(true);
