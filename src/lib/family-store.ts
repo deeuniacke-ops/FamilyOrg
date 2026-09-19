@@ -33,7 +33,11 @@ function normalizeOwner(raw: unknown): string[] | undefined {
 const FAMILY_NAME_KEY = "familyorg_family_name";
 const CHILDREN_KEY = "familyorg_children";
 const ACTIVITIES_KEY = "familyorg_activities";
+const HELPERS_KEY = "familyorg_helpers";
 const CACHE_OWNER_KEY = "familyorg_cache_owner"; // which familyId the cached keys above belong to
+
+/** Default drop-off/collection helpers, seeded once for a brand-new family so existing behaviour doesn't change */
+const DEFAULT_HELPERS = ["Mum", "Dad", "Nana", "Grandad", "Carpool"];
 
 const colours = ["#d9468b", "#42b883", "#7554c7", "#e68a35", "#2f80c0", "#db4f4f"];
 
@@ -76,6 +80,7 @@ let unsubscribers: Array<() => void> = [];
 let familyNameCache = "";
 let childrenCache: Child[] = [];
 let activitiesCache: FamilyActivity[] = [];
+let helpersCache: string[] = [];
 
 function requireFamilyId(): string {
   if (!activeFamilyId) throw new Error("family-store used before initFamilySync() completed");
@@ -86,6 +91,7 @@ function activitiesCol() { return collection(db, "families", requireFamilyId(), 
 function childDoc(id: string) { return doc(db, "families", requireFamilyId(), "children", id); }
 function activityDoc(id: string) { return doc(db, "families", requireFamilyId(), "activities", id); }
 function familySettingsDoc() { return doc(db, "families", requireFamilyId(), "settings", "family"); }
+function helpersDoc() { return doc(db, "families", requireFamilyId(), "settings", "helpers"); }
 
 /**
  * Starts (or switches) live sync for a family's namespace. `seedDisplayName`
@@ -102,14 +108,17 @@ export function initFamilySync(familyId: string, seedDisplayName?: string) {
     childrenCache = get(CHILDREN_KEY, []);
     activitiesCache = get<FamilyActivity[]>(ACTIVITIES_KEY, []).map((a) => ({ ...a, owner: normalizeOwner(a.owner) }));
     familyNameCache = get(FAMILY_NAME_KEY, "");
+    helpersCache = get(HELPERS_KEY, DEFAULT_HELPERS);
   } else {
     childrenCache = [];
     activitiesCache = [];
     familyNameCache = "";
+    helpersCache = DEFAULT_HELPERS;
     set(CACHE_OWNER_KEY, familyId);
     set(CHILDREN_KEY, []);
     set(ACTIVITIES_KEY, []);
     set(FAMILY_NAME_KEY, "");
+    set(HELPERS_KEY, DEFAULT_HELPERS);
   }
   notify();
 
@@ -136,6 +145,16 @@ export function initFamilySync(familyId: string, seedDisplayName?: string) {
       fsWrite(() => setDoc(familySettingsDoc(), { name: seedDisplayName }, { merge: true }));
     }
   }));
+  unsubscribers.push(onSnapshot(helpersDoc(), (snapshot) => {
+    const names = snapshot.data()?.names;
+    if (Array.isArray(names)) {
+      helpersCache = names;
+      set(HELPERS_KEY, helpersCache);
+      notify();
+    } else if (!snapshot.exists()) {
+      fsWrite(() => setDoc(helpersDoc(), { names: DEFAULT_HELPERS }, { merge: true }));
+    }
+  }));
 }
 
 export function getFamilyName(): string { return familyNameCache; }
@@ -143,6 +162,20 @@ export function setFamilyName(name: string) {
   familyNameCache = name;
   set(FAMILY_NAME_KEY, name);
   fsWrite(() => setDoc(familySettingsDoc(), { name }, { merge: true }));
+}
+
+export function getHelpers(): string[] { return helpersCache; }
+export function addHelper(name: string) {
+  const trimmed = name.trim();
+  if (!trimmed || helpersCache.includes(trimmed)) return;
+  helpersCache = [...helpersCache, trimmed];
+  set(HELPERS_KEY, helpersCache);
+  fsWrite(() => setDoc(helpersDoc(), { names: helpersCache }, { merge: true }));
+}
+export function removeHelper(name: string) {
+  helpersCache = helpersCache.filter((h) => h !== name);
+  set(HELPERS_KEY, helpersCache);
+  fsWrite(() => setDoc(helpersDoc(), { names: helpersCache }, { merge: true }));
 }
 
 export function getChildren(): Child[] { return childrenCache; }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { addActivity, getChildren, Child } from "@/lib/family-store";
+import { addActivity, getChildren, getHelpers, Child } from "@/lib/family-store";
 import { parseTranscriptLocally } from "@/lib/voice-parser";
 
 function todayStr() {
@@ -32,8 +32,6 @@ function resizeImageToJpeg(file: File, maxDimension = 1200, quality = 0.8): Prom
   });
 }
 
-const OWNERS = ["Mum", "Dad", "Nana", "Grandad", "Carpool"];
-
 type DraftActivity = {
   key: number;
   childId: string;
@@ -55,6 +53,7 @@ function emptyDraft(): DraftActivity {
 export default function AddActivityPage() {
   const router = useRouter();
   const [children, setChildren] = useState<Child[]>([]);
+  const [helpers, setHelpers] = useState<string[]>([]);
   const [mounted, setMounted] = useState(false);
 
   const [drafts, setDrafts] = useState<DraftActivity[]>([emptyDraft()]);
@@ -69,7 +68,7 @@ export default function AddActivityPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const refresh = () => setChildren(getChildren());
+    const refresh = () => { setChildren(getChildren()); setHelpers(getHelpers()); };
     refresh();
     setMounted(true);
     window.addEventListener("family-sync", refresh);
@@ -272,7 +271,7 @@ export default function AddActivityPage() {
 
       <div className="space-y-4">
         {drafts.map((draft, idx) => (
-          <ActivityCard key={draft.key} draft={draft} index={idx} children={children} total={drafts.length} onUpdate={(field, value) => updateDraft(draft.key, field, value)} onRemove={() => removeDraft(draft.key)} />
+          <ActivityCard key={draft.key} draft={draft} index={idx} children={children} helpers={helpers} total={drafts.length} onUpdate={(field, value) => updateDraft(draft.key, field, value)} onRemove={() => removeDraft(draft.key)} />
         ))}
       </div>
 
@@ -285,8 +284,8 @@ export default function AddActivityPage() {
   );
 }
 
-function ActivityCard({ draft, index, children, total, onUpdate, onRemove }: {
-  draft: DraftActivity; index: number; children: Child[]; total: number;
+function ActivityCard({ draft, index, children, helpers, total, onUpdate, onRemove }: {
+  draft: DraftActivity; index: number; children: Child[]; helpers: string[]; total: number;
   onUpdate: (field: keyof DraftActivity, value: string | number | boolean | string[]) => void; onRemove: () => void;
 }) {
   const [showCollector, setShowCollector] = useState(draft.collector.length > 0);
@@ -334,7 +333,7 @@ function ActivityCard({ draft, index, children, total, onUpdate, onRemove }: {
       <div className="mb-3">
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">🚗 Who&apos;s bringing them? (pick any that apply)</p>
         <div className="flex flex-wrap gap-1.5">
-          {OWNERS.map((o) => (
+          {helpers.map((o) => (
             <button key={o} type="button" onClick={() => toggleOwner(o)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${draft.owner.includes(o) ? "bg-pink-500 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
               {o}
             </button>
@@ -352,7 +351,7 @@ function ActivityCard({ draft, index, children, total, onUpdate, onRemove }: {
         <div className="mb-3">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">🏠 Who&apos;s collecting them?</p>
           <div className="flex flex-wrap gap-1.5">
-            {OWNERS.map((o) => (
+            {helpers.map((o) => (
               <button key={o} type="button" onClick={() => toggleCollector(o)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${draft.collector.includes(o) ? "bg-pink-500 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
                 {o}
               </button>

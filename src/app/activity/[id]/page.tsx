@@ -2,9 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { getActivities, getChildren, updateActivity, removeActivity, Child, FamilyActivity } from "@/lib/family-store";
-
-const OWNERS = ["Mum", "Dad", "Nana", "Grandad", "Carpool"];
+import { getActivities, getChildren, getHelpers, updateActivity, removeActivity, Child, FamilyActivity } from "@/lib/family-store";
 
 function timeLabel(time: string) {
   return new Date(`1970-01-01T${time}:00`).toLocaleTimeString("en-IE", { hour: "numeric", minute: "2-digit" });
@@ -14,6 +12,7 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
   const { id } = use(params);
   const router = useRouter();
   const [children, setChildren] = useState<Child[]>([]);
+  const [helpers, setHelpers] = useState<string[]>([]);
   const [activity, setActivity] = useState<FamilyActivity | null>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -33,6 +32,7 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
   useEffect(() => {
     const kids = getChildren();
     setChildren(kids);
+    setHelpers(getHelpers());
     const all = getActivities();
     const found = all.find((a) => a.id === id);
     if (found) {
@@ -50,7 +50,7 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
       setNotes(found.notes || "");
     }
     setMounted(true);
-    const refreshChildren = () => setChildren(getChildren());
+    const refreshChildren = () => { setChildren(getChildren()); setHelpers(getHelpers()); };
     window.addEventListener("family-sync", refreshChildren);
     return () => window.removeEventListener("family-sync", refreshChildren);
   }, [id]);
@@ -136,7 +136,7 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
         <div className="mb-3">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">🚗 Who&apos;s bringing them? (pick any that apply)</p>
           <div className="flex flex-wrap gap-1.5">
-            {OWNERS.map((o) => (
+            {helpers.map((o) => (
               <button key={o} type="button" onClick={() => setOwner((prev) => prev.includes(o) ? prev.filter((x) => x !== o) : [...prev, o])} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${owner.includes(o) ? "bg-pink-500 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
                 {o}
               </button>
@@ -154,7 +154,7 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
           <div className="mb-3">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">🏠 Who&apos;s collecting them?</p>
             <div className="flex flex-wrap gap-1.5">
-              {OWNERS.map((o) => (
+              {helpers.map((o) => (
                 <button key={o} type="button" onClick={() => setCollector((prev) => prev.includes(o) ? prev.filter((x) => x !== o) : [...prev, o])} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${collector.includes(o) ? "bg-pink-500 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
                   {o}
                 </button>
