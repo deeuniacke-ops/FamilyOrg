@@ -282,6 +282,9 @@ export default function AddActivityPage() {
           </div>
         </div>
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+        <p className="text-[11px] text-slate-400 text-center mb-2">
+          {speechSupported ? "Or type it in below" : "Tap the field below and use your keyboard’s dictation mic to speak it, or just type"}
+        </p>
 
         <div className="flex gap-2 mb-2">
           <input
@@ -296,9 +299,6 @@ export default function AddActivityPage() {
             {processing ? "…" : "Fill in"}
           </button>
         </div>
-        <p className="text-[11px] text-slate-400 text-center mb-3">
-          {speechSupported ? "Or type it in above" : "Tap the field and use your keyboard’s dictation mic to speak it, or just type"}
-        </p>
         {voiceError && <div className="mt-2 bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-red-600 font-medium text-center max-w-xs mx-auto">{voiceError}</div>}
         {photoError && <div className="mt-2 bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-red-600 font-medium text-center max-w-xs mx-auto">{photoError}</div>}
       </div>
