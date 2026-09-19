@@ -134,7 +134,7 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
 
         {/* Owner picker */}
         <div className="mb-3">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Who&apos;s bringing them? (pick any that apply)</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">🚗 Who&apos;s bringing them? (pick any that apply)</p>
           <div className="flex flex-wrap gap-1.5">
             {OWNERS.map((o) => (
               <button key={o} type="button" onClick={() => setOwner((prev) => prev.includes(o) ? prev.filter((x) => x !== o) : [...prev, o])} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${owner.includes(o) ? "bg-pink-500 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
@@ -147,12 +147,12 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
         {/* Collector (collapsed unless already set) */}
         {!showCollector && (
           <button type="button" onClick={() => setShowCollector(true)} className="mb-3 text-xs font-bold text-violet-500">
-            + Someone else collecting them?
+            🏠 + Someone else collecting them?
           </button>
         )}
         {showCollector && (
           <div className="mb-3">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Who&apos;s collecting them?</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">🏠 Who&apos;s collecting them?</p>
             <div className="flex flex-wrap gap-1.5">
               {OWNERS.map((o) => (
                 <button key={o} type="button" onClick={() => setCollector((prev) => prev.includes(o) ? prev.filter((x) => x !== o) : [...prev, o])} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${collector.includes(o) ? "bg-pink-500 text-white shadow" : "bg-gray-100 text-slate-400"}`}>

@@ -332,7 +332,7 @@ function ActivityCard({ draft, index, children, total, onUpdate, onRemove }: {
 
       {/* Owner picker */}
       <div className="mb-3">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Who&apos;s bringing them? (pick any that apply)</p>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">🚗 Who&apos;s bringing them? (pick any that apply)</p>
         <div className="flex flex-wrap gap-1.5">
           {OWNERS.map((o) => (
             <button key={o} type="button" onClick={() => toggleOwner(o)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${draft.owner.includes(o) ? "bg-pink-500 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
@@ -345,12 +345,12 @@ function ActivityCard({ draft, index, children, total, onUpdate, onRemove }: {
       {/* Collector (collapsed unless different from who's bringing them) */}
       {!showCollector && (
         <button type="button" onClick={() => setShowCollector(true)} className="mb-3 text-xs font-bold text-violet-500">
-          + Someone else collecting them?
+          🏠 + Someone else collecting them?
         </button>
       )}
       {showCollector && (
         <div className="mb-3">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Who&apos;s collecting them?</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">🏠 Who&apos;s collecting them?</p>
           <div className="flex flex-wrap gap-1.5">
             {OWNERS.map((o) => (
               <button key={o} type="button" onClick={() => toggleCollector(o)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${draft.collector.includes(o) ? "bg-pink-500 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
