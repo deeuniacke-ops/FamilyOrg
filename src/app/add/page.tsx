@@ -327,7 +327,7 @@ function ActivityCard({ draft, index, children, helpers, total, onUpdate, onRemo
       <div className="flex gap-1.5 mb-3">
         {[30, 60, 90, 120].map((mins) => (
           <button key={mins} type="button" onClick={() => onUpdate("duration", mins)} className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all ${draft.duration === mins ? "bg-violet-600 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
-            {mins < 60 ? `${mins}m` : `${mins / 60}h${mins % 60 ? ` ${mins % 60}m` : ""}`}
+            {mins < 60 ? `${mins}m` : `${Math.floor(mins / 60)}h${mins % 60 ? ` ${mins % 60}m` : ""}`}
           </button>
         ))}
       </div>
