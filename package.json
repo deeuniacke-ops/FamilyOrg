@@ -1,5 +1,5 @@
 {
-  "name": "cluichi",
+  "name": "family-org",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,10 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "firebase": "^8.3.3",
+    "@anthropic-ai/sdk": "^0.123.0",
+    "firebase": "^11.0.2",
     "next": "^15.0.5",
-    "react": "19.0.0-rc-66855b96-20241106",
-    "react-dom": "19.0.0-rc-66855b96-20241106"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/node": "^20",
