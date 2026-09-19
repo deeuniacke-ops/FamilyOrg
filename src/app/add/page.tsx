@@ -212,6 +212,24 @@ export default function AddActivityPage() {
 
   if (!mounted) return null;
 
+  if (!children.length) {
+    return (
+      <div className="animate-fade-in py-12 text-center">
+        <p className="mb-2 text-2xl">🙋</p>
+        <h2 className="mb-1 text-lg font-bold text-slate-900">Add a family member first</h2>
+        <p className="mx-auto mb-6 max-w-xs text-sm text-slate-500">
+          Activities get assigned to a family member, so add at least one person before adding an activity.
+        </p>
+        <button
+          onClick={() => router.push("/manage")}
+          className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-bold text-white shadow-md active:bg-violet-700"
+        >
+          Add a family member
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="animate-fade-in">
       <button onClick={() => router.back()} className="flex items-center gap-1 text-sm font-medium text-slate-500 active:text-slate-700 mb-4 -ml-1">
