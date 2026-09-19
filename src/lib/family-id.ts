@@ -27,3 +27,16 @@ export function leaveFamily() {
   clearFamilyId();
   if (typeof window !== "undefined") window.location.reload();
 }
+
+/**
+ * Mirrors the family's initial into a cookie so the server can render the
+ * correct per-family manifest/apple-touch-icon <link> tags in the very
+ * first HTML response - a client-side-only DOM update isn't reliable for
+ * iOS "Add to Home Screen", which appears to use the icon link present at
+ * initial load rather than one mutated by JS afterward.
+ */
+export function setFamilyLetterCookie(name: string) {
+  const match = name.trim().match(/[a-zA-Z]/);
+  const letter = match ? match[0].toUpperCase() : "C";
+  document.cookie = `family_letter=${letter}; path=/; max-age=31536000; SameSite=Lax`;
+}

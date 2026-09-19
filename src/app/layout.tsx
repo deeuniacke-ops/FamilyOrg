@@ -1,17 +1,26 @@
 import type { Metadata, Viewport } from "next";
+import { cookies } from "next/headers";
 import "./globals.css";
 import FamilyGate from "@/components/FamilyGate";
 
-export const metadata: Metadata = {
-  title: "Clann",
-  description: "Family organiser for calendars, routines, activities and family plans",
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
+export async function generateMetadata(): Promise<Metadata> {
+  const cookieStore = await cookies();
+  const raw = cookieStore.get("family_letter")?.value ?? "";
+  const match = raw.match(/[a-zA-Z]/);
+  const letter = match ? match[0].toUpperCase() : "C";
+
+  return {
     title: "Clann",
-    statusBarStyle: "default",
-  },
-};
+    description: "Family organiser for calendars, routines, activities and family plans",
+    manifest: `/api/family-manifest/${letter}`,
+    icons: { apple: `/api/family-icon/${letter}/192` },
+    appleWebApp: {
+      capable: true,
+      title: "Clann",
+      statusBarStyle: "default",
+    },
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",

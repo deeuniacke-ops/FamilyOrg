@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { deriveFamilyId, getStoredFamilyId, storeFamilyId } from "@/lib/family-id";
+import { deriveFamilyId, getStoredFamilyId, storeFamilyId, setFamilyLetterCookie } from "@/lib/family-id";
 import { getFamilyName, initFamilySync } from "@/lib/family-store";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
@@ -39,7 +39,9 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     if (!ready) return;
     const updateInstallIcons = () => {
-      const match = getFamilyName().trim().match(/[a-zA-Z]/);
+      const name = getFamilyName();
+      setFamilyLetterCookie(name);
+      const match = name.trim().match(/[a-zA-Z]/);
       const letter = match ? match[0].toUpperCase() : "C";
       document.querySelector('link[rel="manifest"]')?.setAttribute("href", `/api/family-manifest/${letter}`);
       document.querySelector('link[rel="apple-touch-icon"]')?.setAttribute("href", `/api/family-icon/${letter}/192`);
