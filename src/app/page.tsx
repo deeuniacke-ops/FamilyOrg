@@ -60,25 +60,29 @@ export default function HomePage() {
     <div className="mb-3 flex gap-1.5 overflow-x-auto p-1 -m-1">
       <button
         onClick={() => setSelectedChildId(null)}
-        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition-all ${!selectedChildId ? "bg-violet-100 text-violet-600 ring-2 ring-violet-500" : "bg-slate-100 text-slate-400"}`}
+        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition-all ${!selectedChildId ? "bg-violet-600 text-white shadow" : "border border-gray-200 bg-white text-slate-500"}`}
       >
         All
       </button>
-      {children.map((child) => (
-        <button
-          key={child.id}
-          onClick={() => setSelectedChildId(selectedChildId === child.id ? null : child.id)}
-          className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold text-slate-700 transition-all ${selectedChildId === child.id ? "ring-2 ring-offset-1 ring-violet-500" : selectedChildId ? "opacity-40" : ""}`}
-          style={{ backgroundColor: child.color }}
-        >
-          {child.name}
-        </button>
-      ))}
+      {children.map((child) => {
+        const isSelected = selectedChildId === child.id;
+        return (
+          <button
+            key={child.id}
+            onClick={() => setSelectedChildId(isSelected ? null : child.id)}
+            className={`flex shrink-0 items-center gap-1.5 rounded-full py-1 pl-1 pr-3 text-xs font-bold transition-all ${isSelected ? "text-white shadow" : "border border-gray-200 bg-white text-slate-600"} ${selectedChildId && !isSelected ? "opacity-40" : ""}`}
+            style={{ backgroundColor: isSelected ? child.color : undefined }}
+          >
+            <span className="flex h-6 w-6 items-center justify-center rounded-full text-white text-[10px] font-black ring-2 ring-white" style={{ backgroundColor: child.color }}>{child.initials}</span>
+            {child.name}
+          </button>
+        );
+      })}
     </div>
 
-    <div className="mb-3 flex rounded-xl bg-slate-100 p-1">
-      <button onClick={() => setView("list")} className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition-all ${view === "list" ? "bg-white text-violet-600 shadow-sm" : "text-slate-400"}`}>This Week</button>
-      <button onClick={() => setView("upcoming")} className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition-all ${view === "upcoming" ? "bg-white text-violet-600 shadow-sm" : "text-slate-400"}`}>Upcoming</button>
+    <div className="mb-3 flex rounded-xl bg-violet-50 p-1">
+      <button onClick={() => setView("list")} className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition-all ${view === "list" ? "bg-violet-600 text-white shadow-sm" : "text-violet-400"}`}>This Week</button>
+      <button onClick={() => setView("upcoming")} className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition-all ${view === "upcoming" ? "bg-violet-600 text-white shadow-sm" : "text-violet-400"}`}>Upcoming</button>
     </div>
 
     {view === "list" && <>
@@ -120,10 +124,10 @@ export default function HomePage() {
                 const activityChildren = children.filter((c) => activity.childIds.includes(c.id));
                 const hasClash = dayClashes.has(activity.id);
                 const realId = activity.id.replace(/_\d{4}-\d{2}-\d{2}$/, "");
-                return <Link key={activity.id} href={`/activity/${realId}`} className={`flex items-center gap-3 rounded-xl border bg-white p-3 shadow-sm active:bg-slate-50 transition-colors ${hasClash ? "border-red-200" : "border-slate-200"}`}>
+                return <Link key={activity.id} href={`/activity/${realId}`} className={`flex items-center gap-3 rounded-xl border border-l-4 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors ${hasClash ? "border-red-200" : "border-slate-200"}`} style={{ borderLeftColor: activityChildren[0]?.color }}>
                   <div className="flex shrink-0 -space-x-2">
                     {activityChildren.map((c) => (
-                      <span key={c.id} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-700 text-sm font-black ring-2 ring-white" style={{ backgroundColor: c.color }}>{c.initials}</span>
+                      <span key={c.id} className="flex h-10 w-10 items-center justify-center rounded-full text-white text-sm font-black ring-2 ring-white" style={{ backgroundColor: c.color }}>{c.initials}</span>
                     ))}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -170,10 +174,10 @@ export default function HomePage() {
               {items.map((activity) => {
                 const activityChildren = children.filter((c) => activity.childIds.includes(c.id));
                 const realId = activity.id.replace(/_\d{4}-\d{2}-\d{2}$/, "");
-                return <Link key={activity.id} href={`/activity/${realId}`} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors">
+                return <Link key={activity.id} href={`/activity/${realId}`} className="flex items-center gap-3 rounded-xl border border-l-4 border-slate-200 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors" style={{ borderLeftColor: activityChildren[0]?.color }}>
                   <div className="flex shrink-0 -space-x-2">
                     {activityChildren.map((c) => (
-                      <span key={c.id} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-700 text-sm font-black ring-2 ring-white" style={{ backgroundColor: c.color }}>{c.initials}</span>
+                      <span key={c.id} className="flex h-10 w-10 items-center justify-center rounded-full text-white text-sm font-black ring-2 ring-white" style={{ backgroundColor: c.color }}>{c.initials}</span>
                     ))}
                   </div>
                   <div className="min-w-0 flex-1">

@@ -288,7 +288,7 @@ function ActivityCard({ draft, index, children, helpers, total, onUpdate, onRemo
       <div className="flex flex-wrap gap-2 mb-3">
         {children.map((child) => (
           <button key={child.id} type="button" onClick={() => onUpdate("childIds", draft.childIds.includes(child.id) ? draft.childIds.filter((x) => x !== child.id) : [...draft.childIds, child.id])} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${draft.childIds.includes(child.id) ? "ring-2 ring-violet-500 bg-white shadow" : "bg-gray-100 text-slate-500"}`}>
-            <span className="flex h-5 w-5 items-center justify-center rounded-full text-slate-700 text-[9px] font-black" style={{ backgroundColor: child.color }}>{child.initials}</span>
+            <span className="flex h-5 w-5 items-center justify-center rounded-full text-white text-[9px] font-black" style={{ backgroundColor: child.color }}>{child.initials}</span>
             {child.name}
           </button>
         ))}

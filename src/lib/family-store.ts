@@ -53,9 +53,9 @@ const CACHE_OWNER_KEY = "familyorg_cache_owner"; // which familyId the cached ke
 /** Default drop-off/collection helpers, seeded once for a brand-new family so existing behaviour doesn't change */
 const DEFAULT_HELPERS = ["Mum", "Dad", "Nana", "Grandad", "Carpool"];
 
-/** Soft pastel tints, cycled per family member in the order they're added -
- *  not tied to any particular name */
-const colours = ["#FCE2D4", "#DEF2D6", "#D9EBF2", "#F2D9DE", "#E2DAF2", "#FBEFD1"];
+/** Vivid tag colors, cycled per family member in the order they're added -
+ *  not tied to any particular name. Kept saturated enough for white text. */
+const colours = ["#ec4899", "#3b82f6", "#22c55e", "#8b5cf6", "#14b8a6", "#f59e0b"];
 
 function get<T>(key: string, fallback: T): T {
   try {
