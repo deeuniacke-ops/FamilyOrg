@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
-import { useRouter } from "next/navigation";
-import { getActivities, getChildren, getHelpers, updateActivity, removeActivity, Child, FamilyActivity } from "@/lib/family-store";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getActivities, getChildren, getHelpers, updateActivity, removeActivity, cancelActivityOccurrence, updateActivityDrivers, Child, FamilyActivity } from "@/lib/family-store";
 
 function timeLabel(time: string) {
   return new Date(`1970-01-01T${time}:00`).toLocaleTimeString("en-IE", { hour: "numeric", minute: "2-digit" });
@@ -11,6 +11,7 @@ function timeLabel(time: string) {
 export default function ActivityEditPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [children, setChildren] = useState<Child[]>([]);
   const [helpers, setHelpers] = useState<string[]>([]);
   const [activity, setActivity] = useState<FamilyActivity | null>(null);
@@ -28,6 +29,7 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
   const [collector, setCollector] = useState<string[]>([]);
   const [showCollector, setShowCollector] = useState(false);
   const [notes, setNotes] = useState("");
+  const [occurrenceDate, setOccurrenceDate] = useState("");
 
   useEffect(() => {
     const kids = getChildren();
@@ -36,24 +38,28 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
     const all = getActivities();
     const found = all.find((a) => a.id === id);
     if (found) {
+      const isRecurring = found.recurring === "weekly";
+      const occDate = searchParams.get("date") || found.date;
+      const driverOverride = isRecurring ? found.driverOverrides?.[occDate] : undefined;
       setActivity(found);
+      setOccurrenceDate(occDate);
       setChildIds(found.childIds);
       setTitle(found.title);
       setDate(found.date);
       setTime(found.time);
       setDuration(found.durationMinutes);
       setLocation(found.location || "");
-      setRecurring(found.recurring === "weekly");
-      setOwner(found.owner || []);
-      setCollector(found.collector || []);
-      setShowCollector(!!found.collector?.length);
+      setRecurring(isRecurring);
+      setOwner(driverOverride?.owner ?? found.owner ?? []);
+      setCollector(driverOverride?.collector ?? found.collector ?? []);
+      setShowCollector(!!(driverOverride?.collector ?? found.collector)?.length);
       setNotes(found.notes || "");
     }
     setMounted(true);
     const refreshChildren = () => { setChildren(getChildren()); setHelpers(getHelpers()); };
     window.addEventListener("family-sync", refreshChildren);
     return () => window.removeEventListener("family-sync", refreshChildren);
-  }, [id]);
+  }, [id, searchParams]);
 
   const handleSave = () => {
     if (!childIds.length || !title.trim() || !date || !time) return;
@@ -65,15 +71,22 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
       durationMinutes: duration,
       location: location.trim() || undefined,
       recurring: recurring ? "weekly" : undefined,
-      owner: owner.length ? owner : undefined,
-      collector: collector.length ? collector : undefined,
       notes: notes.trim() || undefined,
+      ...(recurring ? {} : { owner: owner.length ? owner : undefined, collector: collector.length ? collector : undefined }),
     });
+    if (recurring) {
+      updateActivityDrivers(id, occurrenceDate, { owner: owner.length ? owner : undefined, collector: collector.length ? collector : undefined });
+    }
     router.back();
   };
 
   const handleDelete = () => {
     removeActivity(id);
+    router.push("/");
+  };
+
+  const handleCancelOccurrence = () => {
+    cancelActivityOccurrence(id, occurrenceDate);
     router.push("/");
   };
 
@@ -96,7 +109,7 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
 
       <h2 className="text-xl font-bold text-slate-900 mb-1">Edit Activity</h2>
       <p className="text-sm text-slate-400 mb-5">
-        {activityChildren.map((c) => c.name).join(", ")} · {timeLabel(activity.time)} · {activity.date}
+        {activityChildren.map((c) => c.name).join(", ")} · {timeLabel(activity.time)} · {occurrenceDate}
       </p>
 
       <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-card">
@@ -115,10 +128,12 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
         <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Activity name" className="w-full mb-3 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-violet-500 focus:outline-none text-sm" />
 
         {/* Date + time */}
-        <div className="flex gap-2 mb-3">
+        <div className="flex gap-2 mb-1">
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="flex-1 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 focus:border-violet-500 focus:outline-none text-sm" />
           <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="w-24 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 focus:border-violet-500 focus:outline-none text-sm" />
         </div>
+        {recurring && <p className="text-[10px] text-slate-400 mb-3">Date/time here apply to the whole weekly series</p>}
+        {!recurring && <div className="mb-3" />}
 
         {/* Duration chips */}
         <div className="flex gap-1.5 mb-3">
@@ -135,6 +150,7 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
         {/* Owner picker */}
         <div className="mb-3">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">🚗 Who&apos;s bringing them? (pick any that apply)</p>
+          {recurring && <p className="text-[10px] text-violet-500 font-semibold mb-1.5 -mt-1">Applies to {occurrenceDate} only - other occurrences keep their own driver</p>}
           <div className="flex flex-wrap gap-1.5">
             {helpers.map((o) => (
               <button key={o} type="button" onClick={() => setOwner((prev) => prev.includes(o) ? prev.filter((x) => x !== o) : [...prev, o])} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${owner.includes(o) ? "bg-pink-500 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
@@ -182,9 +198,26 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
         Save Changes
       </button>
 
-      <button onClick={handleDelete} className="w-full mt-3 mb-20 py-3 rounded-xl border-2 border-red-200 text-red-500 text-sm font-bold active:bg-red-50 transition-all">
-        Delete Activity
-      </button>
+      {recurring ? (
+        <div className="mt-3 mb-20 flex flex-col gap-2">
+          <button
+            onClick={() => { if (confirm(`Cancel just the ${occurrenceDate} occurrence? The rest of the weekly series stays.`)) handleCancelOccurrence(); }}
+            className="w-full py-3 rounded-xl border-2 border-amber-200 text-amber-600 text-sm font-bold active:bg-amber-50 transition-all"
+          >
+            Cancel this occurrence only
+          </button>
+          <button
+            onClick={() => { if (confirm("Delete the entire weekly series? This removes every occurrence, past and future.")) handleDelete(); }}
+            className="w-full py-3 rounded-xl border-2 border-red-200 text-red-500 text-sm font-bold active:bg-red-50 transition-all"
+          >
+            Delete entire series
+          </button>
+        </div>
+      ) : (
+        <button onClick={handleDelete} className="w-full mt-3 mb-20 py-3 rounded-xl border-2 border-red-200 text-red-500 text-sm font-bold active:bg-red-50 transition-all">
+          Delete Activity
+        </button>
+      )}
     </div>
   );
 }

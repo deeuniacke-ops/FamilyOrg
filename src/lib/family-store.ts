@@ -21,6 +21,12 @@ export type FamilyActivity = {
   recurring?: "weekly";
   owner?: string[];
   collector?: string[];
+  /** Dates (YYYY-MM-DD) of a weekly-recurring activity that were cancelled
+   *  for that occurrence only - the series itself keeps going */
+  excludedDates?: string[];
+  /** Per-date owner/collector overrides for a weekly-recurring activity, so
+   *  editing who's driving one occurrence doesn't change every occurrence */
+  driverOverrides?: Record<string, { owner?: string[]; collector?: string[] }>;
 };
 
 /** Older activities stored owner as a single string - normalize on read */
@@ -250,23 +256,49 @@ export function removeActivity(id: string) {
   fsWrite(() => deleteDoc(activityDoc(id)));
 }
 
-/** Return activities for a set of dates, expanding weekly recurring ones */
+/** Return activities for a set of dates, expanding weekly recurring ones.
+ *  Skips dates cancelled via excludedDates and applies any per-date
+ *  driverOverrides (so editing one occurrence's owner/collector doesn't
+ *  change the rest of the series). */
 export function getActivitiesForDates(dates: string[]): FamilyActivity[] {
   const all = getActivities();
   const result: FamilyActivity[] = [];
   for (const date of dates) {
     const dayOfWeek = new Date(date + "T12:00:00").getDay();
     for (const a of all) {
+      if (a.excludedDates?.includes(date)) continue;
+      const override = a.driverOverrides?.[date];
       if (a.date === date) {
-        result.push(a);
+        result.push(override ? { ...a, ...override } : a);
       } else if (a.recurring === "weekly") {
         const activityDay = new Date(a.date + "T12:00:00").getDay();
         if (activityDay === dayOfWeek && a.date <= date) {
-          result.push({ ...a, id: `${a.id}_${date}`, date });
+          result.push({ ...a, ...(override || {}), id: `${a.id}_${date}`, date });
         }
       }
     }
   }
   return result;
 }
+
+/** Sets who's bringing/collecting for a single occurrence of a recurring
+ *  activity, without touching the other occurrences */
+export function updateActivityDrivers(id: string, date: string, drivers: { owner?: string[]; collector?: string[] }) {
+  const activity = activitiesCache.find((a) => a.id === id);
+  if (!activity) return;
+  const cleaned: { owner?: string[]; collector?: string[] } = {};
+  if (drivers.owner?.length) cleaned.owner = drivers.owner;
+  if (drivers.collector?.length) cleaned.collector = drivers.collector;
+  const driverOverrides = { ...activity.driverOverrides, [date]: cleaned };
+  updateActivity(id, { driverOverrides });
+}
+
+/** Cancels a single occurrence of a recurring activity - the series continues */
+export function cancelActivityOccurrence(id: string, date: string) {
+  const activity = activitiesCache.find((a) => a.id === id);
+  if (!activity) return;
+  const excludedDates = [...(activity.excludedDates || []), date];
+  updateActivity(id, { excludedDates });
+}
+
 export { colours };

@@ -124,7 +124,7 @@ export default function HomePage() {
                 const activityChildren = children.filter((c) => activity.childIds.includes(c.id));
                 const hasClash = dayClashes.has(activity.id);
                 const realId = activity.id.replace(/_\d{4}-\d{2}-\d{2}$/, "");
-                return <Link key={activity.id} href={`/activity/${realId}`} className={`flex items-center gap-3 rounded-xl border border-l-4 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors ${hasClash ? "border-red-200" : "border-slate-200"}`} style={{ borderLeftColor: activityChildren[0]?.color }}>
+                return <Link key={activity.id} href={`/activity/${realId}?date=${activity.date}`} className={`flex items-center gap-3 rounded-xl border border-l-4 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors ${hasClash ? "border-red-200" : "border-slate-200"}`} style={{ borderLeftColor: activityChildren[0]?.color }}>
                   <div className="flex shrink-0 -space-x-2">
                     {activityChildren.map((c) => (
                       <span key={c.id} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-700 text-sm font-black ring-2 ring-white" style={{ backgroundColor: c.color }}>{c.initials}</span>
@@ -174,7 +174,7 @@ export default function HomePage() {
               {items.map((activity) => {
                 const activityChildren = children.filter((c) => activity.childIds.includes(c.id));
                 const realId = activity.id.replace(/_\d{4}-\d{2}-\d{2}$/, "");
-                return <Link key={activity.id} href={`/activity/${realId}`} className="flex items-center gap-3 rounded-xl border border-l-4 border-slate-200 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors" style={{ borderLeftColor: activityChildren[0]?.color }}>
+                return <Link key={activity.id} href={`/activity/${realId}?date=${activity.date}`} className="flex items-center gap-3 rounded-xl border border-l-4 border-slate-200 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors" style={{ borderLeftColor: activityChildren[0]?.color }}>
                   <div className="flex shrink-0 -space-x-2">
                     {activityChildren.map((c) => (
                       <span key={c.id} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-700 text-sm font-black ring-2 ring-white" style={{ backgroundColor: c.color }}>{c.initials}</span>
