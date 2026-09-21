@@ -260,7 +260,7 @@ export default function AddActivityPage() {
 
       <button type="button" onClick={() => setDrafts((prev) => [...prev, emptyDraft()])} className="w-full mt-3 py-2.5 rounded-xl border-2 border-dashed border-gray-200 text-sm font-semibold text-slate-400 active:bg-gray-50 transition-colors">+ Add another activity</button>
 
-      <button onClick={handleSaveAll} disabled={!validCount} className="w-full mt-5 mb-4 py-3.5 rounded-xl bg-violet-600 text-white text-sm font-bold disabled:opacity-30 active:bg-violet-700 transition-all shadow-md">
+      <button onClick={handleSaveAll} disabled={!validCount} className="w-full mt-5 mb-20 py-3.5 rounded-xl bg-violet-600 text-white text-sm font-bold disabled:opacity-30 active:bg-violet-700 transition-all shadow-md">
         {validCount > 1 ? `Save ${validCount} Activities` : "Save Activity"}
       </button>
     </div>
@@ -288,7 +288,7 @@ function ActivityCard({ draft, index, children, helpers, total, onUpdate, onRemo
       <div className="flex flex-wrap gap-2 mb-3">
         {children.map((child) => (
           <button key={child.id} type="button" onClick={() => onUpdate("childIds", draft.childIds.includes(child.id) ? draft.childIds.filter((x) => x !== child.id) : [...draft.childIds, child.id])} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${draft.childIds.includes(child.id) ? "ring-2 ring-violet-500 bg-white shadow" : "bg-gray-100 text-slate-500"}`}>
-            <span className="flex h-5 w-5 items-center justify-center rounded-full text-white text-[9px] font-black" style={{ backgroundColor: child.color }}>{child.initials}</span>
+            <span className="flex h-5 w-5 items-center justify-center rounded-full text-slate-700 text-[9px] font-black" style={{ backgroundColor: child.color }}>{child.initials}</span>
             {child.name}
           </button>
         ))}

@@ -70,10 +70,10 @@ export default function HomePage() {
           <button
             key={child.id}
             onClick={() => setSelectedChildId(isSelected ? null : child.id)}
-            className={`flex shrink-0 items-center gap-1.5 rounded-full py-1 pl-1 pr-3 text-xs font-bold transition-all ${isSelected ? "text-white shadow" : "border border-gray-200 bg-white text-slate-600"} ${selectedChildId && !isSelected ? "opacity-40" : ""}`}
+            className={`flex shrink-0 items-center gap-1.5 rounded-full py-1 pl-1 pr-3 text-xs font-bold transition-all ${isSelected ? "text-slate-700 shadow ring-2 ring-offset-1 ring-violet-400" : "border border-gray-200 bg-white text-slate-600"} ${selectedChildId && !isSelected ? "opacity-40" : ""}`}
             style={{ backgroundColor: isSelected ? child.color : undefined }}
           >
-            <span className="flex h-6 w-6 items-center justify-center rounded-full text-white text-[10px] font-black ring-2 ring-white" style={{ backgroundColor: child.color }}>{child.initials}</span>
+            <span className="flex h-6 w-6 items-center justify-center rounded-full text-slate-700 text-[10px] font-black ring-2 ring-white" style={{ backgroundColor: child.color }}>{child.initials}</span>
             {child.name}
           </button>
         );
@@ -127,7 +127,7 @@ export default function HomePage() {
                 return <Link key={activity.id} href={`/activity/${realId}`} className={`flex items-center gap-3 rounded-xl border border-l-4 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors ${hasClash ? "border-red-200" : "border-slate-200"}`} style={{ borderLeftColor: activityChildren[0]?.color }}>
                   <div className="flex shrink-0 -space-x-2">
                     {activityChildren.map((c) => (
-                      <span key={c.id} className="flex h-10 w-10 items-center justify-center rounded-full text-white text-sm font-black ring-2 ring-white" style={{ backgroundColor: c.color }}>{c.initials}</span>
+                      <span key={c.id} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-700 text-sm font-black ring-2 ring-white" style={{ backgroundColor: c.color }}>{c.initials}</span>
                     ))}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -177,7 +177,7 @@ export default function HomePage() {
                 return <Link key={activity.id} href={`/activity/${realId}`} className="flex items-center gap-3 rounded-xl border border-l-4 border-slate-200 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors" style={{ borderLeftColor: activityChildren[0]?.color }}>
                   <div className="flex shrink-0 -space-x-2">
                     {activityChildren.map((c) => (
-                      <span key={c.id} className="flex h-10 w-10 items-center justify-center rounded-full text-white text-sm font-black ring-2 ring-white" style={{ backgroundColor: c.color }}>{c.initials}</span>
+                      <span key={c.id} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-700 text-sm font-black ring-2 ring-white" style={{ backgroundColor: c.color }}>{c.initials}</span>
                     ))}
                   </div>
                   <div className="min-w-0 flex-1">
