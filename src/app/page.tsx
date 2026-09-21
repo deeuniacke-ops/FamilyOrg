@@ -16,10 +16,15 @@ function dayLabel(date: string) { return new Date(date + "T12:00:00").toLocaleDa
 function dateSummary(date: string) { return new Date(date + "T12:00:00").toLocaleDateString("en-IE", { weekday: "long", day: "numeric", month: "short" }); }
 function monthLabel(date: string) { return new Date(date + "T12:00:00").toLocaleDateString("en-IE", { month: "long", year: "numeric" }); }
 function minutes(time: string) { const [h, m] = time.split(":").map(Number); return h * 60 + m; }
+function sameChildSet(a: string[], b: string[]) {
+  if (a.length !== b.length) return false;
+  const setB = new Set(b);
+  return a.every((id) => setB.has(id));
+}
 function overlapIds(items: FamilyActivity[]) {
   const result = new Set<string>();
   items.forEach((a, i) => items.slice(i + 1).forEach((b) => {
-    if (a.childId === b.childId || a.date !== b.date) return;
+    if (sameChildSet(a.childIds, b.childIds) || a.date !== b.date) return;
     const as = minutes(a.time), bs = minutes(b.time);
     if (as < bs + b.durationMinutes && bs < as + a.durationMinutes) { result.add(a.id); result.add(b.id); }
   }));
@@ -37,7 +42,7 @@ export default function HomePage() {
 
   const today = dateKey(new Date());
   const listDates = Array.from({ length: 7 }, (_, i) => addDays(selectedDate, i));
-  const activities = getActivitiesForDates(listDates).filter((a) => !selectedChildId || a.childId === selectedChildId);
+  const activities = getActivitiesForDates(listDates).filter((a) => !selectedChildId || a.childIds.includes(selectedChildId));
 
   const refresh = () => { setChildren(getChildren()); setRawActivities(getActivities()); };
   useEffect(() => {
@@ -63,7 +68,7 @@ export default function HomePage() {
         <button
           key={child.id}
           onClick={() => setSelectedChildId(selectedChildId === child.id ? null : child.id)}
-          className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold text-white transition-all ${selectedChildId === child.id ? "ring-2 ring-offset-1 ring-violet-500" : selectedChildId ? "opacity-40" : ""}`}
+          className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold text-slate-700 transition-all ${selectedChildId === child.id ? "ring-2 ring-offset-1 ring-violet-500" : selectedChildId ? "opacity-40" : ""}`}
           style={{ backgroundColor: child.color }}
         >
           {child.name}
@@ -112,14 +117,18 @@ export default function HomePage() {
             </div>
             <div className="flex flex-col gap-2">
               {dayActivities.map((activity) => {
-                const child = children.find((c) => c.id === activity.childId);
+                const activityChildren = children.filter((c) => activity.childIds.includes(c.id));
                 const hasClash = dayClashes.has(activity.id);
                 const realId = activity.id.replace(/_\d{4}-\d{2}-\d{2}$/, "");
-                return <Link key={activity.id} href={`/activity/${realId}`} className={`flex items-center gap-3 rounded-xl border-2 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors ${hasClash ? "border-red-200" : "border-slate-100"}`}>
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white text-sm font-black" style={{ backgroundColor: child?.color }}>{child?.initials}</span>
+                return <Link key={activity.id} href={`/activity/${realId}`} className={`flex items-center gap-3 rounded-xl border bg-white p-3 shadow-sm active:bg-slate-50 transition-colors ${hasClash ? "border-red-200" : "border-slate-200"}`}>
+                  <div className="flex shrink-0 -space-x-2">
+                    {activityChildren.map((c) => (
+                      <span key={c.id} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-700 text-sm font-black ring-2 ring-white" style={{ backgroundColor: c.color }}>{c.initials}</span>
+                    ))}
+                  </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-slate-900">{activity.title}</p>
-                    <p className="text-xs text-slate-500">{child?.name} · {timeLabel(activity.time)} · {activity.durationMinutes}m</p>
+                    <p className="text-xs text-slate-500">{activityChildren.map((c) => c.name).join(", ")} · {timeLabel(activity.time)} · {activity.durationMinutes}m</p>
                     {activity.location && <p className="text-[11px] text-slate-400">📍 {activity.location}</p>}
                     {!!activity.owner?.length && <p className="text-[10px] font-bold text-pink-500">🚗 {activity.owner.join(", ")}</p>}
                     {!!activity.collector?.length && <p className="text-[10px] font-bold text-amber-600">🏠 {activity.collector.join(", ")}</p>}
@@ -141,7 +150,7 @@ export default function HomePage() {
     {view === "upcoming" && (() => {
       // Generate dates for the next 90 days so weekly recurring activities expand
       const upcomingDates = Array.from({ length: 90 }, (_, i) => addDays(today, i));
-      const expanded = getActivitiesForDates(upcomingDates).filter((a) => !selectedChildId || a.childId === selectedChildId);
+      const expanded = getActivitiesForDates(upcomingDates).filter((a) => !selectedChildId || a.childIds.includes(selectedChildId));
       // Dedupe by id (expanded recurring activities get unique ids per date already)
       const seen = new Set<string>();
       const upcoming = expanded
@@ -159,13 +168,17 @@ export default function HomePage() {
             </summary>
             <div className="flex flex-col gap-2">
               {items.map((activity) => {
-                const child = children.find((c) => c.id === activity.childId);
+                const activityChildren = children.filter((c) => activity.childIds.includes(c.id));
                 const realId = activity.id.replace(/_\d{4}-\d{2}-\d{2}$/, "");
-                return <Link key={activity.id} href={`/activity/${realId}`} className="flex items-center gap-3 rounded-xl border-2 border-slate-100 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white text-sm font-black" style={{ backgroundColor: child?.color }}>{child?.initials}</span>
+                return <Link key={activity.id} href={`/activity/${realId}`} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors">
+                  <div className="flex shrink-0 -space-x-2">
+                    {activityChildren.map((c) => (
+                      <span key={c.id} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-700 text-sm font-black ring-2 ring-white" style={{ backgroundColor: c.color }}>{c.initials}</span>
+                    ))}
+                  </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-slate-900">{activity.title}</p>
-                    <p className="text-xs text-slate-500">{child?.name} · {dayLabel(activity.date)}</p>
+                    <p className="text-xs text-slate-500">{activityChildren.map((c) => c.name).join(", ")} · {dayLabel(activity.date)}</p>
                     <p className="text-xs text-slate-400">{timeLabel(activity.time)} · {activity.durationMinutes}m</p>
                     {activity.location && <p className="text-[11px] text-slate-400">📍 {activity.location}</p>}
                     {!!activity.owner?.length && <p className="text-[10px] font-bold text-pink-500">🚗 {activity.owner.join(", ")}</p>}

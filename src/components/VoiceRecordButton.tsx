@@ -34,7 +34,7 @@ export default function VoiceRecordButton() {
       for (const a of data.activities) {
         if (a.childId && a.date && a.time) {
           addActivity({
-            childId: a.childId,
+            childIds: [a.childId],
             title: a.title || "Activity",
             date: a.date,
             time: a.time,
@@ -63,7 +63,7 @@ export default function VoiceRecordButton() {
     for (const a of result.activities) {
       if (a.childId && a.date && a.time) {
         addActivity({
-          childId: a.childId,
+          childIds: [a.childId],
           title: a.title || "Activity",
           date: a.date,
           time: a.time,

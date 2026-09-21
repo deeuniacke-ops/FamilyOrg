@@ -32,7 +32,7 @@ export default function BottomNav() {
             className={`flex h-14 w-14 items-center justify-center rounded-full text-3xl font-bold shadow-lg transition-all active:scale-95 ${
               path === "/add"
                 ? "bg-violet-700 text-white ring-2 ring-violet-300"
-                : "bg-gradient-to-r from-violet-600 via-pink-500 to-amber-400 text-white"
+                : "bg-violet-600 text-white"
             }`}
           >
             +

@@ -56,7 +56,7 @@ export default function InstallPrompt() {
   if (!visible) return null;
 
   return (
-    <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border-2 border-violet-200 bg-violet-50 px-4 py-3">
+    <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3">
       <p className="text-xs font-medium text-violet-700">
         {isIOS
           ? <>Tap <strong>Share</strong> then <strong>Add to Home Screen</strong> to install Clann</>

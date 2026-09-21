@@ -119,7 +119,7 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
         <div className="mb-10 flex flex-col gap-5">
           {FEATURES.map((f) => (
             <div key={f.title} className="flex items-start gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 via-pink-500 to-amber-400 text-xl">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-xl">
                 {f.icon}
               </span>
               <div>
@@ -140,7 +140,7 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Family name"
-              className="w-full rounded-xl border-2 border-gray-200 bg-white px-3 py-3 text-sm text-slate-900 focus:border-violet-500 focus:outline-none"
+              className="w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm text-slate-900 focus:border-violet-500 focus:outline-none"
             />
             <div className="relative">
               <input
@@ -149,7 +149,7 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
                 type={showPassphrase ? "text" : "password"}
                 placeholder="Shared passphrase"
                 onKeyDown={(e) => { if (e.key === "Enter") handleJoin(); }}
-                className="w-full rounded-xl border-2 border-gray-200 bg-white px-3 py-3 pr-16 text-sm text-slate-900 focus:border-violet-500 focus:outline-none"
+                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-3 pr-16 text-sm text-slate-900 focus:border-violet-500 focus:outline-none"
               />
               <button
                 type="button"

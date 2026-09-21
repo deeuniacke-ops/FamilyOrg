@@ -11,7 +11,7 @@ export type Child = {
 
 export type FamilyActivity = {
   id: string;
-  childId: string;
+  childIds: string[];
   title: string;
   date: string;
   time: string;
@@ -30,6 +30,20 @@ function normalizeOwner(raw: unknown): string[] | undefined {
   return undefined;
 }
 
+/** Older activities stored a single childId instead of childIds - normalize on read */
+function normalizeChildIds(data: { childIds?: unknown; childId?: unknown }): string[] {
+  if (Array.isArray(data.childIds) && data.childIds.length) return data.childIds as string[];
+  if (typeof data.childId === "string" && data.childId) return [data.childId];
+  return [];
+}
+
+/** Firestore's write rules still require a legacy `childId` field to be
+ *  present - mirror the first assigned child into it so older validation
+ *  keeps passing without needing a rules change for multi-child support */
+function withLegacyChildId<T extends { childIds?: string[] }>(obj: T): T & { childId?: string } {
+  return obj.childIds?.length ? { ...obj, childId: obj.childIds[0] } : obj;
+}
+
 const FAMILY_NAME_KEY = "familyorg_family_name";
 const CHILDREN_KEY = "familyorg_children";
 const ACTIVITIES_KEY = "familyorg_activities";
@@ -39,7 +53,9 @@ const CACHE_OWNER_KEY = "familyorg_cache_owner"; // which familyId the cached ke
 /** Default drop-off/collection helpers, seeded once for a brand-new family so existing behaviour doesn't change */
 const DEFAULT_HELPERS = ["Mum", "Dad", "Nana", "Grandad", "Carpool"];
 
-const colours = ["#d9468b", "#42b883", "#7554c7", "#e68a35", "#2f80c0", "#db4f4f"];
+/** Soft pastel tints, cycled per family member in the order they're added -
+ *  not tied to any particular name */
+const colours = ["#FCE2D4", "#DEF2D6", "#D9EBF2", "#F2D9DE", "#E2DAF2", "#FBEFD1"];
 
 function get<T>(key: string, fallback: T): T {
   try {
@@ -106,7 +122,7 @@ export function initFamilySync(familyId: string, seedDisplayName?: string) {
 
   if (get(CACHE_OWNER_KEY, "") === familyId) {
     childrenCache = get(CHILDREN_KEY, []);
-    activitiesCache = get<FamilyActivity[]>(ACTIVITIES_KEY, []).map((a) => ({ ...a, owner: normalizeOwner(a.owner) }));
+    activitiesCache = get<FamilyActivity[]>(ACTIVITIES_KEY, []).map((a) => ({ ...a, childIds: normalizeChildIds(a), owner: normalizeOwner(a.owner) }));
     familyNameCache = get(FAMILY_NAME_KEY, "");
     helpersCache = get(HELPERS_KEY, DEFAULT_HELPERS);
   } else {
@@ -130,7 +146,7 @@ export function initFamilySync(familyId: string, seedDisplayName?: string) {
   unsubscribers.push(onSnapshot(activitiesCol(), (snapshot) => {
     activitiesCache = snapshot.docs.map((d) => {
       const data = d.data() as FamilyActivity;
-      return { ...data, owner: normalizeOwner(data.owner) };
+      return { ...data, childIds: normalizeChildIds(data), owner: normalizeOwner(data.owner) };
     });
     set(ACTIVITIES_KEY, activitiesCache);
     notify();
@@ -192,15 +208,24 @@ export function updateChild(id: string, updates: Partial<Omit<Child, "id">>) {
   fsWrite(() => setDoc(childDoc(id), cleanForUpdate(updates), { merge: true }));
 }
 export function removeChild(id: string) {
-  const orphanedActivityIds = activitiesCache.filter((activity) => activity.childId === id).map((a) => a.id);
+  const idsToDelete: string[] = [];
+  const idsToUpdate: Array<{ id: string; childIds: string[] }> = [];
+  activitiesCache = activitiesCache.reduce<FamilyActivity[]>((acc, activity) => {
+    if (!activity.childIds.includes(id)) { acc.push(activity); return acc; }
+    const remaining = activity.childIds.filter((c) => c !== id);
+    if (!remaining.length) { idsToDelete.push(activity.id); return acc; }
+    idsToUpdate.push({ id: activity.id, childIds: remaining });
+    acc.push({ ...activity, childIds: remaining });
+    return acc;
+  }, []);
   childrenCache = childrenCache.filter((child) => child.id !== id);
-  activitiesCache = activitiesCache.filter((activity) => activity.childId !== id);
   set(CHILDREN_KEY, childrenCache);
   set(ACTIVITIES_KEY, activitiesCache);
   fsWrite(async () => {
     const batch = writeBatch(db);
     batch.delete(childDoc(id));
-    orphanedActivityIds.forEach((activityId) => batch.delete(activityDoc(activityId)));
+    idsToDelete.forEach((activityId) => batch.delete(activityDoc(activityId)));
+    idsToUpdate.forEach((a) => batch.update(activityDoc(a.id), withLegacyChildId({ childIds: a.childIds })));
     await batch.commit();
   });
 }
@@ -210,13 +235,13 @@ export function addActivity(input: Omit<FamilyActivity, "id">): FamilyActivity {
   const activity = { ...input, id: `activity-${Date.now()}`, durationMinutes: input.durationMinutes || 60 };
   activitiesCache = [...activitiesCache, activity];
   set(ACTIVITIES_KEY, activitiesCache);
-  fsWrite(() => setDoc(activityDoc(activity.id), clean(activity)));
+  fsWrite(() => setDoc(activityDoc(activity.id), clean(withLegacyChildId(activity))));
   return activity;
 }
 export function updateActivity(id: string, updates: Partial<Omit<FamilyActivity, "id">>) {
   activitiesCache = activitiesCache.map((activity) => activity.id === id ? { ...activity, ...updates } : activity);
   set(ACTIVITIES_KEY, activitiesCache);
-  fsWrite(() => setDoc(activityDoc(id), cleanForUpdate(updates), { merge: true }));
+  fsWrite(() => setDoc(activityDoc(id), cleanForUpdate(withLegacyChildId(updates)), { merge: true }));
 }
 export function removeActivity(id: string) {
   activitiesCache = activitiesCache.filter((activity) => activity.id !== id);

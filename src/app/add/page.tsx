@@ -12,7 +12,7 @@ function todayStr() {
 
 type DraftActivity = {
   key: number;
-  childId: string;
+  childIds: string[];
   title: string;
   date: string;
   time: string;
@@ -25,7 +25,7 @@ type DraftActivity = {
 };
 
 function emptyDraft(): DraftActivity {
-  return { key: Date.now(), childId: "", title: "", date: todayStr(), time: "10:00", duration: 60, location: "", recurring: false, owner: [], collector: [], notes: "" };
+  return { key: Date.now(), childIds: [], title: "", date: todayStr(), time: "10:00", duration: 60, location: "", recurring: false, owner: [], collector: [], notes: "" };
 }
 
 export default function AddActivityPage() {
@@ -72,7 +72,7 @@ export default function AddActivityPage() {
       .filter((a: { childId?: string; title?: string }) => a.childId || a.title)
       .map((a: { childId?: string; title?: string; date?: string; time?: string; durationMinutes?: number; location?: string }) => ({
         key: Date.now() + Math.random(),
-        childId: a.childId || "",
+        childIds: a.childId ? [a.childId] : [],
         title: a.title || "Activity",
         date: a.date || todayStr(),
         time: a.time || "10:00",
@@ -179,11 +179,11 @@ export default function AddActivityPage() {
   };
 
   const handleSaveAll = () => {
-    const valid = drafts.filter((d) => d.childId && d.title.trim() && d.date && d.time);
+    const valid = drafts.filter((d) => d.childIds.length && d.title.trim() && d.date && d.time);
     if (!valid.length) return;
     for (const d of valid) {
       addActivity({
-        childId: d.childId,
+        childIds: d.childIds,
         title: d.title.trim(),
         date: d.date,
         time: d.time,
@@ -198,7 +198,7 @@ export default function AddActivityPage() {
     router.push("/");
   };
 
-  const validCount = drafts.filter((d) => d.childId && d.title.trim() && d.date && d.time).length;
+  const validCount = drafts.filter((d) => d.childIds.length && d.title.trim() && d.date && d.time).length;
 
   if (!mounted) return null;
 
@@ -234,14 +234,14 @@ export default function AddActivityPage() {
         <div className="flex items-center justify-center gap-6 mb-3">
           {speechSupported && (
             <div className="flex flex-col items-center">
-              <button type="button" onClick={handleRecord} disabled={listening || processing} className={`flex h-16 w-16 items-center justify-center rounded-full text-2xl shadow-lg transition-all active:scale-95 ${listening ? "animate-pulse bg-red-500 text-white ring-4 ring-red-200" : processing ? "bg-amber-500 text-white animate-pulse" : "bg-gradient-to-r from-violet-600 via-pink-500 to-amber-400 text-white"}`}>
+              <button type="button" onClick={handleRecord} disabled={listening || processing} className={`flex h-16 w-16 items-center justify-center rounded-full text-2xl shadow-lg transition-all active:scale-95 ${listening ? "animate-pulse bg-red-500 text-white ring-4 ring-red-200" : processing ? "bg-amber-500 text-white animate-pulse" : "bg-violet-600 text-white"}`}>
                 {listening ? "🎤" : processing ? "⏳" : "🎙"}
               </button>
               <p className="text-xs text-slate-400 mt-2">{listening ? "Listening…" : processing ? "Processing…" : "Tap to speak"}</p>
             </div>
           )}
           <div className="flex flex-col items-center">
-            <button type="button" onClick={() => fileInputRef.current?.click()} disabled={photoProcessing} className={`flex h-16 w-16 items-center justify-center rounded-full text-2xl shadow-lg transition-all active:scale-95 ${photoProcessing ? "bg-amber-500 text-white animate-pulse" : "bg-gradient-to-r from-violet-600 via-pink-500 to-amber-400 text-white"}`}>
+            <button type="button" onClick={() => fileInputRef.current?.click()} disabled={photoProcessing} className={`flex h-16 w-16 items-center justify-center rounded-full text-2xl shadow-lg transition-all active:scale-95 ${photoProcessing ? "bg-amber-500 text-white animate-pulse" : "bg-violet-600 text-white"}`}>
               {photoProcessing ? "⏳" : "📷"}
             </button>
             <p className="text-xs text-slate-400 mt-2">{photoProcessing ? "Reading…" : "Add a photo"}</p>
@@ -279,7 +279,7 @@ function ActivityCard({ draft, index, children, helpers, total, onUpdate, onRemo
     onUpdate("collector", draft.collector.includes(o) ? draft.collector.filter((x) => x !== o) : [...draft.collector, o]);
   };
   return (
-    <div className="rounded-2xl border-2 border-gray-100 bg-white p-4 shadow-card animate-slide-up">
+    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-card animate-slide-up">
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Activity {total > 1 ? index + 1 : ""}</span>
         {total > 1 && <button type="button" onClick={onRemove} className="text-xs font-semibold text-red-400 active:text-red-600">Remove</button>}
@@ -287,13 +287,13 @@ function ActivityCard({ draft, index, children, helpers, total, onUpdate, onRemo
 
       <div className="flex flex-wrap gap-2 mb-3">
         {children.map((child) => (
-          <button key={child.id} type="button" onClick={() => onUpdate("childId", child.id)} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${draft.childId === child.id ? "ring-2 ring-violet-500 bg-white shadow" : "bg-gray-100 text-slate-500"}`}>
-            <span className="flex h-5 w-5 items-center justify-center rounded-full text-white text-[9px] font-black" style={{ backgroundColor: child.color }}>{child.initials}</span>
+          <button key={child.id} type="button" onClick={() => onUpdate("childIds", draft.childIds.includes(child.id) ? draft.childIds.filter((x) => x !== child.id) : [...draft.childIds, child.id])} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${draft.childIds.includes(child.id) ? "ring-2 ring-violet-500 bg-white shadow" : "bg-gray-100 text-slate-500"}`}>
+            <span className="flex h-5 w-5 items-center justify-center rounded-full text-slate-700 text-[9px] font-black" style={{ backgroundColor: child.color }}>{child.initials}</span>
             {child.name}
           </button>
         ))}
       </div>
-      {!draft.childId && <p className="text-[10px] text-red-400 mb-2">Pick a family member</p>}
+      {!draft.childIds.length && <p className="text-[10px] text-red-400 mb-2">Pick at least one family member</p>}
 
       <input type="text" value={draft.title} onChange={(e) => onUpdate("title", e.target.value)} placeholder="Activity name" className="w-full mb-3 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-violet-500 focus:outline-none text-sm" />
 

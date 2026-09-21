@@ -17,7 +17,7 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
   const [mounted, setMounted] = useState(false);
 
   // Editable fields
-  const [childId, setChildId] = useState("");
+  const [childIds, setChildIds] = useState<string[]>([]);
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
@@ -37,7 +37,7 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
     const found = all.find((a) => a.id === id);
     if (found) {
       setActivity(found);
-      setChildId(found.childId);
+      setChildIds(found.childIds);
       setTitle(found.title);
       setDate(found.date);
       setTime(found.time);
@@ -56,9 +56,9 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
   }, [id]);
 
   const handleSave = () => {
-    if (!childId || !title.trim() || !date || !time) return;
+    if (!childIds.length || !title.trim() || !date || !time) return;
     updateActivity(id, {
-      childId,
+      childIds,
       title: title.trim(),
       date,
       time,
@@ -85,7 +85,7 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
     </div>
   );
 
-  const child = children.find((c) => c.id === activity.childId);
+  const activityChildren = children.filter((c) => activity.childIds.includes(c.id));
 
   return (
     <div className="animate-fade-in">
@@ -96,16 +96,16 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
 
       <h2 className="text-xl font-bold text-slate-900 mb-1">Edit Activity</h2>
       <p className="text-sm text-slate-400 mb-5">
-        {child?.name} · {timeLabel(activity.time)} · {activity.date}
+        {activityChildren.map((c) => c.name).join(", ")} · {timeLabel(activity.time)} · {activity.date}
       </p>
 
-      <div className="rounded-2xl border-2 border-gray-100 bg-white p-4 shadow-card">
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-card">
         {/* Family member picker */}
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Family Member</p>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Family Member(s)</p>
         <div className="flex flex-wrap gap-2 mb-3">
           {children.map((c) => (
-            <button key={c.id} type="button" onClick={() => setChildId(c.id)} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${childId === c.id ? "ring-2 ring-violet-500 bg-white shadow" : "bg-gray-100 text-slate-500"}`}>
-              <span className="flex h-5 w-5 items-center justify-center rounded-full text-white text-[9px] font-black" style={{ backgroundColor: c.color }}>{c.initials}</span>
+            <button key={c.id} type="button" onClick={() => setChildIds((prev) => prev.includes(c.id) ? prev.filter((x) => x !== c.id) : [...prev, c.id])} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${childIds.includes(c.id) ? "ring-2 ring-violet-500 bg-white shadow" : "bg-gray-100 text-slate-500"}`}>
+              <span className="flex h-5 w-5 items-center justify-center rounded-full text-slate-700 text-[9px] font-black" style={{ backgroundColor: c.color }}>{c.initials}</span>
               {c.name}
             </button>
           ))}

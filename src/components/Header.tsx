@@ -16,12 +16,12 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 bg-gradient-to-r from-violet-600 via-pink-500 to-amber-400 px-5 pt-[env(safe-area-inset-top)] text-white shadow-md">
+    <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur px-5 pt-[env(safe-area-inset-top)]">
       <Link href="/about" className="flex h-14 items-center justify-between">
-        <h1 className="text-xl font-black tracking-tight">
+        <h1 className="text-xl font-black tracking-tight text-slate-800">
           {mounted ? familyName : ""}
         </h1>
-        <span className="text-white/50 text-[11px] font-semibold">
+        <span className="text-slate-400 text-[11px] font-semibold">
           Clann Family Organiser
         </span>
       </Link>

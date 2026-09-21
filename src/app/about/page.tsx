@@ -23,7 +23,7 @@ export default function AboutPage() {
       <div className="flex flex-col gap-5">
         {FEATURES.map((f) => (
           <div key={f.title} className="flex items-start gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 via-pink-500 to-amber-400 text-xl">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-xl">
               {f.icon}
             </span>
             <div>
