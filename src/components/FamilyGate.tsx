@@ -80,7 +80,7 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
   if (pendingNewFamily) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center animate-fade-in">
-        <h1 className="mb-1 text-2xl font-black tracking-tight text-indigo-600">New family?</h1>
+        <h1 className="mb-1 text-2xl font-black tracking-tight text-violet-600">New family?</h1>
         <p className="mb-6 max-w-xs text-sm text-slate-500">
           Nobody has used the name <strong>&ldquo;{pendingNewFamily.name}&rdquo;</strong> with that exact passphrase before. Continuing will create a brand-new, empty family space.
         </p>
@@ -91,7 +91,7 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
           <button
             onClick={() => completeJoin(pendingNewFamily.id, pendingNewFamily.name)}
             disabled={joining}
-            className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white shadow-md transition-all active:bg-indigo-700 disabled:opacity-30"
+            className="w-full rounded-xl bg-violet-600 py-3 text-sm font-bold text-white shadow-md transition-all active:bg-violet-700 disabled:opacity-30"
           >
             {joining ? "Creating…" : `Yes, create "${pendingNewFamily.name}"`}
           </button>
@@ -110,7 +110,7 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
     return (
       <div className="mx-auto min-h-screen max-w-lg px-6 py-10 animate-fade-in">
         <div className="mb-8 text-center">
-          <h1 className="mb-2 text-4xl font-black tracking-tight text-indigo-600">Clann</h1>
+          <h1 className="mb-2 text-4xl font-black tracking-tight text-violet-600">Clann</h1>
           <p className="mx-auto max-w-xs text-base font-bold text-slate-700">
             One shared calendar for everyone&apos;s activities
           </p>
@@ -119,7 +119,7 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
         <div className="mb-10 flex flex-col gap-5">
           {FEATURES.map((f) => (
             <div key={f.title} className="flex items-start gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-xl">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-xl">
                 {f.icon}
               </span>
               <div>
@@ -140,7 +140,7 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Family name"
-              className="w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none"
+              className="w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm text-slate-900 focus:border-violet-500 focus:outline-none"
             />
             <div className="relative">
               <input
@@ -149,12 +149,12 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
                 type={showPassphrase ? "text" : "password"}
                 placeholder="Shared passphrase"
                 onKeyDown={(e) => { if (e.key === "Enter") handleJoin(); }}
-                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-3 pr-16 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-3 pr-16 text-sm text-slate-900 focus:border-violet-500 focus:outline-none"
               />
               <button
                 type="button"
                 onClick={() => setShowPassphrase((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-indigo-500"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-violet-500"
               >
                 {showPassphrase ? "Hide" : "Show"}
               </button>
@@ -162,7 +162,7 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
             <button
               onClick={handleJoin}
               disabled={!name.trim() || !passphrase.trim() || joining || checking}
-              className="mt-1 w-full rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white shadow-md transition-all active:bg-indigo-700 disabled:opacity-30"
+              className="mt-1 w-full rounded-xl bg-violet-600 py-3 text-sm font-bold text-white shadow-md transition-all active:bg-violet-700 disabled:opacity-30"
             >
               {checking ? "Checking…" : joining ? "Joining…" : "Join Family"}
             </button>

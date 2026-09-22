@@ -14,7 +14,7 @@ export default function AboutPage() {
       </button>
 
       <div className="mb-8 text-center">
-        <h1 className="mb-2 text-4xl font-black tracking-tight text-indigo-600">Clann</h1>
+        <h1 className="mb-2 text-4xl font-black tracking-tight text-violet-600">Clann</h1>
         <p className="mx-auto max-w-xs text-base font-bold text-slate-700">
           One shared calendar for everyone&apos;s activities
         </p>
@@ -23,7 +23,7 @@ export default function AboutPage() {
       <div className="flex flex-col gap-5">
         {FEATURES.map((f) => (
           <div key={f.title} className="flex items-start gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-xl">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-xl">
               {f.icon}
             </span>
             <div>

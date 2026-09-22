@@ -212,7 +212,7 @@ export default function AddActivityPage() {
         </p>
         <button
           onClick={() => router.push("/manage")}
-          className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-md active:bg-indigo-700"
+          className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-bold text-white shadow-md active:bg-violet-700"
         >
           Add a family member
         </button>
@@ -234,14 +234,14 @@ export default function AddActivityPage() {
         <div className="flex items-center justify-center gap-6 mb-3">
           {speechSupported && (
             <div className="flex flex-col items-center">
-              <button type="button" onClick={handleRecord} disabled={listening || processing} className={`flex h-16 w-16 items-center justify-center rounded-full text-2xl shadow-lg transition-all active:scale-95 ${listening ? "animate-pulse bg-red-500 text-white ring-4 ring-red-200" : processing ? "bg-amber-500 text-white animate-pulse" : "bg-indigo-600 text-white"}`}>
+              <button type="button" onClick={handleRecord} disabled={listening || processing} className={`flex h-16 w-16 items-center justify-center rounded-full text-2xl shadow-lg transition-all active:scale-95 ${listening ? "animate-pulse bg-red-500 text-white ring-4 ring-red-200" : processing ? "bg-amber-500 text-white animate-pulse" : "bg-violet-600 text-white"}`}>
                 {listening ? "🎤" : processing ? "⏳" : "🎙"}
               </button>
               <p className="text-xs text-slate-400 mt-2">{listening ? "Listening…" : processing ? "Processing…" : "Tap to speak"}</p>
             </div>
           )}
           <div className="flex flex-col items-center">
-            <button type="button" onClick={() => fileInputRef.current?.click()} disabled={photoProcessing} className={`flex h-16 w-16 items-center justify-center rounded-full text-2xl shadow-lg transition-all active:scale-95 ${photoProcessing ? "bg-amber-500 text-white animate-pulse" : "bg-indigo-600 text-white"}`}>
+            <button type="button" onClick={() => fileInputRef.current?.click()} disabled={photoProcessing} className={`flex h-16 w-16 items-center justify-center rounded-full text-2xl shadow-lg transition-all active:scale-95 ${photoProcessing ? "bg-amber-500 text-white animate-pulse" : "bg-violet-600 text-white"}`}>
               {photoProcessing ? "⏳" : "📷"}
             </button>
             <p className="text-xs text-slate-400 mt-2">{photoProcessing ? "Reading…" : "Add a photo"}</p>
@@ -260,7 +260,7 @@ export default function AddActivityPage() {
 
       <button type="button" onClick={() => setDrafts((prev) => [...prev, emptyDraft()])} className="w-full mt-3 py-2.5 rounded-xl border-2 border-dashed border-gray-200 text-sm font-semibold text-slate-400 active:bg-gray-50 transition-colors">+ Add another activity</button>
 
-      <button onClick={handleSaveAll} disabled={!validCount} className="w-full mt-5 mb-20 py-3.5 rounded-xl bg-indigo-600 text-white text-sm font-bold disabled:opacity-30 active:bg-indigo-700 transition-all shadow-md">
+      <button onClick={handleSaveAll} disabled={!validCount} className="w-full mt-5 mb-20 py-3.5 rounded-xl bg-violet-600 text-white text-sm font-bold disabled:opacity-30 active:bg-violet-700 transition-all shadow-md">
         {validCount > 1 ? `Save ${validCount} Activities` : "Save Activity"}
       </button>
     </div>
@@ -287,7 +287,7 @@ function ActivityCard({ draft, index, children, helpers, total, onUpdate, onRemo
 
       <div className="flex flex-wrap gap-2 mb-3">
         {children.map((child) => (
-          <button key={child.id} type="button" onClick={() => onUpdate("childIds", draft.childIds.includes(child.id) ? draft.childIds.filter((x) => x !== child.id) : [...draft.childIds, child.id])} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${draft.childIds.includes(child.id) ? "ring-2 ring-indigo-500 bg-white shadow" : "bg-gray-100 text-slate-500"}`}>
+          <button key={child.id} type="button" onClick={() => onUpdate("childIds", draft.childIds.includes(child.id) ? draft.childIds.filter((x) => x !== child.id) : [...draft.childIds, child.id])} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${draft.childIds.includes(child.id) ? "ring-2 ring-violet-500 bg-white shadow" : "bg-gray-100 text-slate-500"}`}>
             <span className="flex h-5 w-5 items-center justify-center rounded-full text-slate-700 text-[9px] font-black" style={{ backgroundColor: child.color }}>{child.initials}</span>
             {child.name}
           </button>
@@ -295,22 +295,22 @@ function ActivityCard({ draft, index, children, helpers, total, onUpdate, onRemo
       </div>
       {!draft.childIds.length && <p className="text-[10px] text-red-400 mb-2">Pick at least one family member</p>}
 
-      <input type="text" value={draft.title} onChange={(e) => onUpdate("title", e.target.value)} placeholder="Activity name" className="w-full mb-3 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-indigo-500 focus:outline-none text-sm" />
+      <input type="text" value={draft.title} onChange={(e) => onUpdate("title", e.target.value)} placeholder="Activity name" className="w-full mb-3 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-violet-500 focus:outline-none text-sm" />
 
       <div className="flex gap-2 mb-3">
-        <input type="date" value={draft.date} onChange={(e) => onUpdate("date", e.target.value)} className="flex-1 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 focus:border-indigo-500 focus:outline-none text-sm" />
-        <input type="time" value={draft.time} onChange={(e) => onUpdate("time", e.target.value)} className="w-24 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 focus:border-indigo-500 focus:outline-none text-sm" />
+        <input type="date" value={draft.date} onChange={(e) => onUpdate("date", e.target.value)} className="flex-1 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 focus:border-violet-500 focus:outline-none text-sm" />
+        <input type="time" value={draft.time} onChange={(e) => onUpdate("time", e.target.value)} className="w-24 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 focus:border-violet-500 focus:outline-none text-sm" />
       </div>
 
       <div className="flex gap-1.5 mb-3">
         {[30, 60, 90, 120].map((mins) => (
-          <button key={mins} type="button" onClick={() => onUpdate("duration", mins)} className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all ${draft.duration === mins ? "bg-indigo-600 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
+          <button key={mins} type="button" onClick={() => onUpdate("duration", mins)} className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all ${draft.duration === mins ? "bg-violet-600 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
             {mins < 60 ? `${mins}m` : `${Math.floor(mins / 60)}h${mins % 60 ? ` ${mins % 60}m` : ""}`}
           </button>
         ))}
       </div>
 
-      <input type="text" value={draft.location} onChange={(e) => onUpdate("location", e.target.value)} placeholder="Location (optional)" className="w-full mb-3 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-indigo-500 focus:outline-none text-sm" />
+      <input type="text" value={draft.location} onChange={(e) => onUpdate("location", e.target.value)} placeholder="Location (optional)" className="w-full mb-3 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-violet-500 focus:outline-none text-sm" />
 
       {/* Owner picker */}
       <div className="mb-3">
@@ -326,7 +326,7 @@ function ActivityCard({ draft, index, children, helpers, total, onUpdate, onRemo
 
       {/* Collector (collapsed unless different from who's bringing them) */}
       {!showCollector && (
-        <button type="button" onClick={() => setShowCollector(true)} className="mb-3 text-xs font-bold text-indigo-500">
+        <button type="button" onClick={() => setShowCollector(true)} className="mb-3 text-xs font-bold text-violet-500">
           🏠 + Someone else collecting them?
         </button>
       )}
@@ -349,11 +349,11 @@ function ActivityCard({ draft, index, children, helpers, total, onUpdate, onRemo
         onChange={(e) => onUpdate("notes", e.target.value)}
         placeholder="Notes (optional) — e.g. bring shin pads, entrance around the back"
         rows={2}
-        className="w-full mb-3 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-indigo-500 focus:outline-none text-sm resize-none"
+        className="w-full mb-3 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-violet-500 focus:outline-none text-sm resize-none"
       />
 
       {/* Recurring toggle */}
-      <button type="button" onClick={() => onUpdate("recurring", !draft.recurring)} className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all ${draft.recurring ? "bg-indigo-100 text-indigo-600 border-2 border-indigo-300" : "bg-gray-50 text-slate-400 border-2 border-gray-200"}`}>
+      <button type="button" onClick={() => onUpdate("recurring", !draft.recurring)} className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all ${draft.recurring ? "bg-violet-100 text-violet-600 border-2 border-violet-300" : "bg-gray-50 text-slate-400 border-2 border-gray-200"}`}>
         {draft.recurring ? "🔁 Repeats weekly" : "One-off (tap for weekly)"}
       </button>
     </div>

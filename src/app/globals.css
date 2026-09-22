@@ -5,5 +5,5 @@
 html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; overflow-x: hidden; }
 body { @apply bg-slate-50 text-slate-900 antialiased; overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; }
 .pb-safe { padding-bottom: calc(5rem + var(--safe-bottom)); }
-::selection { @apply bg-indigo-200 text-indigo-900; }
+::selection { @apply bg-violet-200 text-violet-900; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }

@@ -13,7 +13,7 @@ function addDays(value: string, days: number) {
 }
 function timeLabel(time: string) { return new Date(`1970-01-01T${time}:00`).toLocaleTimeString("en-IE", { hour: "numeric", minute: "2-digit" }); }
 function dayLabel(date: string) { return new Date(date + "T12:00:00").toLocaleDateString("en-IE", { weekday: "long", day: "numeric", month: "short" }); }
-function dateSummary(date: string) { return new Date(date + "T12:00:00").toLocaleDateString("en-IE", { weekday: "short", day: "numeric", month: "short" }); }
+function dateSummary(date: string) { return new Date(date + "T12:00:00").toLocaleDateString("en-IE", { weekday: "long", day: "numeric", month: "short" }); }
 function monthLabel(date: string) { return new Date(date + "T12:00:00").toLocaleDateString("en-IE", { month: "long", year: "numeric" }); }
 function minutes(time: string) { const [h, m] = time.split(":").map(Number); return h * 60 + m; }
 function sameChildSet(a: string[], b: string[]) {
@@ -60,7 +60,7 @@ export default function HomePage() {
     <div className="mb-3 flex gap-1.5 overflow-x-auto p-1 -m-1">
       <button
         onClick={() => setSelectedChildId(null)}
-        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition-all ${!selectedChildId ? "bg-indigo-600 text-white shadow" : "border border-gray-200 bg-white text-slate-500"}`}
+        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition-all ${!selectedChildId ? "bg-violet-600 text-white shadow" : "border border-gray-200 bg-white text-slate-500"}`}
       >
         All
       </button>
@@ -70,7 +70,7 @@ export default function HomePage() {
           <button
             key={child.id}
             onClick={() => setSelectedChildId(isSelected ? null : child.id)}
-            className={`flex shrink-0 items-center gap-1.5 rounded-full py-1 pl-1 pr-3 text-xs font-bold transition-all ${isSelected ? "text-slate-700 shadow ring-2 ring-offset-1 ring-indigo-400" : "border border-gray-200 bg-white text-slate-600"} ${selectedChildId && !isSelected ? "opacity-40" : ""}`}
+            className={`flex shrink-0 items-center gap-1.5 rounded-full py-1 pl-1 pr-3 text-xs font-bold transition-all ${isSelected ? "text-slate-700 shadow ring-2 ring-offset-1 ring-violet-400" : "border border-gray-200 bg-white text-slate-600"} ${selectedChildId && !isSelected ? "opacity-40" : ""}`}
             style={{ backgroundColor: isSelected ? child.color : undefined }}
           >
             <span className="flex h-6 w-6 items-center justify-center rounded-full text-slate-700 text-[10px] font-black ring-2 ring-white" style={{ backgroundColor: child.color }}>{child.initials}</span>
@@ -80,35 +80,32 @@ export default function HomePage() {
       })}
     </div>
 
-    <div className="mb-3 flex items-center justify-between gap-2">
-      <div className="flex rounded-xl bg-slate-100 p-1">
-        <button onClick={() => setView("list")} className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${view === "list" ? "bg-white text-slate-800 shadow-sm" : "text-slate-400"}`}>This Week</button>
-        <button onClick={() => setView("upcoming")} className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${view === "upcoming" ? "bg-white text-slate-800 shadow-sm" : "text-slate-400"}`}>Upcoming</button>
-      </div>
-      {view === "list" && (
-        <div className="flex shrink-0 items-center gap-0.5">
-          <button aria-label="Previous day" onClick={() => setSelectedDate(addDays(selectedDate, -1))} className="h-8 w-8 rounded-lg text-base font-bold text-slate-400 active:bg-slate-100">‹</button>
-          <button
-            aria-label="Pick a date"
-            onClick={() => { try { dateInputRef.current?.showPicker(); } catch { dateInputRef.current?.click(); } }}
-            className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-600 active:bg-slate-100"
-          >
-            📅 {dateSummary(selectedDate)}
-          </button>
-          <button aria-label="Next day" onClick={() => setSelectedDate(addDays(selectedDate, 1))} className="h-8 w-8 rounded-lg text-base font-bold text-slate-400 active:bg-slate-100">›</button>
-          <input
-            ref={dateInputRef}
-            type="date"
-            value={selectedDate}
-            onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
-            className="absolute h-0 w-0 opacity-0"
-          />
-        </div>
-      )}
+    <div className="mb-3 flex rounded-xl bg-violet-50 p-1">
+      <button onClick={() => setView("list")} className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition-all ${view === "list" ? "bg-violet-600 text-white shadow-sm" : "text-violet-400"}`}>This Week</button>
+      <button onClick={() => setView("upcoming")} className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition-all ${view === "upcoming" ? "bg-violet-600 text-white shadow-sm" : "text-violet-400"}`}>Upcoming</button>
     </div>
 
     {view === "list" && <>
-      <button onClick={() => setSelectedDate(today)} className="mb-3 w-full rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-[10px] font-bold text-indigo-700">
+      <div className="mb-3 flex items-center gap-2">
+        <button aria-label="Previous day" onClick={() => setSelectedDate(addDays(selectedDate, -1))} className="h-9 w-9 rounded-xl border border-slate-200 bg-white text-lg font-bold text-slate-500 shadow-sm">‹</button>
+        <div className="flex-1 text-center"><p className="text-sm font-black text-slate-800">{dateSummary(selectedDate)}</p><p className="text-[10px] font-medium text-slate-400">{selectedDate === today ? "Today" : ""}</p></div>
+        <button aria-label="Next day" onClick={() => setSelectedDate(addDays(selectedDate, 1))} className="h-9 w-9 rounded-xl border border-slate-200 bg-white text-lg font-bold text-slate-500 shadow-sm">›</button>
+        <button
+          aria-label="Pick a date"
+          onClick={() => { try { dateInputRef.current?.showPicker(); } catch { dateInputRef.current?.click(); } }}
+          className="h-9 w-9 rounded-xl border border-slate-200 bg-white text-base text-slate-500 shadow-sm"
+        >
+          📅
+        </button>
+        <input
+          ref={dateInputRef}
+          type="date"
+          value={selectedDate}
+          onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
+          className="absolute h-0 w-0 opacity-0"
+        />
+      </div>
+      <button onClick={() => setSelectedDate(today)} className="mb-3 w-full rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-[10px] font-bold text-violet-700">
         Today · {new Date(today + "T12:00:00").toLocaleDateString("en-IE", { weekday: "long", day: "numeric", month: "short" })}
       </button>
 
@@ -127,7 +124,7 @@ export default function HomePage() {
                 const activityChildren = children.filter((c) => activity.childIds.includes(c.id));
                 const hasClash = dayClashes.has(activity.id);
                 const realId = activity.id.replace(/_\d{4}-\d{2}-\d{2}$/, "");
-                return <Link key={activity.id} href={`/activity/${realId}?date=${activity.date}`} className={`flex items-center gap-3 rounded-2xl border bg-white p-3 shadow-sm active:bg-slate-50 transition-colors ${hasClash ? "border-red-200" : "border-slate-200"}`}>
+                return <Link key={activity.id} href={`/activity/${realId}?date=${activity.date}`} className={`flex items-center gap-3 rounded-xl border border-l-4 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors ${hasClash ? "border-red-200" : "border-slate-200"}`} style={{ borderLeftColor: activityChildren[0]?.color }}>
                   <div className="flex shrink-0 -space-x-2">
                     {activityChildren.map((c) => (
                       <span key={c.id} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-700 text-sm font-black ring-2 ring-white" style={{ backgroundColor: c.color }}>{c.initials}</span>
@@ -135,10 +132,11 @@ export default function HomePage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-slate-900">{activity.title}</p>
-                    <p className="text-xs text-slate-500">{activityChildren.map((c) => c.name).join(", ")} · {timeLabel(activity.time)} · {activity.durationMinutes}m{activity.recurring === "weekly" ? " · 🔁 Weekly" : ""}</p>
-                    {activity.location && <p className="text-[11px] font-medium text-rose-500">📍 {activity.location}</p>}
+                    <p className="text-xs text-slate-500">{activityChildren.map((c) => c.name).join(", ")} · {timeLabel(activity.time)} · {activity.durationMinutes}m</p>
+                    {activity.location && <p className="text-[11px] text-slate-400">📍 {activity.location}</p>}
                     {!!activity.owner?.length && <p className="text-[10px] font-bold text-pink-500">🚗 {activity.owner.join(", ")}</p>}
                     {!!activity.collector?.length && <p className="text-[10px] font-bold text-amber-600">🏠 {activity.collector.join(", ")}</p>}
+                    {activity.recurring === "weekly" && <p className="text-[10px] font-bold text-violet-500">🔁 Weekly</p>}
                     {activity.notes && <p className="text-[10px] font-bold text-slate-400">📝 Note</p>}
                   </div>
                   <div className="shrink-0 text-right">
@@ -168,7 +166,7 @@ export default function HomePage() {
       return <div className="flex flex-col gap-5">
         {Object.entries(months).map(([month, items]) => (
           <details key={month} className="group" open>
-            <summary className="mb-2 flex cursor-pointer list-none items-center justify-between text-sm font-black text-indigo-600 uppercase tracking-wider [&::-webkit-details-marker]:hidden">
+            <summary className="mb-2 flex cursor-pointer list-none items-center justify-between text-sm font-black text-violet-600 uppercase tracking-wider [&::-webkit-details-marker]:hidden">
               <span>{month} <span className="ml-1 text-[10px] font-medium normal-case text-slate-400">({items.length})</span></span>
               <span className="text-slate-400 transition-transform group-open:rotate-90">›</span>
             </summary>
@@ -176,7 +174,7 @@ export default function HomePage() {
               {items.map((activity) => {
                 const activityChildren = children.filter((c) => activity.childIds.includes(c.id));
                 const realId = activity.id.replace(/_\d{4}-\d{2}-\d{2}$/, "");
-                return <Link key={activity.id} href={`/activity/${realId}?date=${activity.date}`} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors">
+                return <Link key={activity.id} href={`/activity/${realId}?date=${activity.date}`} className="flex items-center gap-3 rounded-xl border border-l-4 border-slate-200 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors" style={{ borderLeftColor: activityChildren[0]?.color }}>
                   <div className="flex shrink-0 -space-x-2">
                     {activityChildren.map((c) => (
                       <span key={c.id} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-700 text-sm font-black ring-2 ring-white" style={{ backgroundColor: c.color }}>{c.initials}</span>
@@ -185,10 +183,11 @@ export default function HomePage() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-slate-900">{activity.title}</p>
                     <p className="text-xs text-slate-500">{activityChildren.map((c) => c.name).join(", ")} · {dayLabel(activity.date)}</p>
-                    <p className="text-xs text-slate-400">{timeLabel(activity.time)} · {activity.durationMinutes}m{activity.recurring === "weekly" ? " · 🔁 Weekly" : ""}</p>
-                    {activity.location && <p className="text-[11px] font-medium text-rose-500">📍 {activity.location}</p>}
+                    <p className="text-xs text-slate-400">{timeLabel(activity.time)} · {activity.durationMinutes}m</p>
+                    {activity.location && <p className="text-[11px] text-slate-400">📍 {activity.location}</p>}
                     {!!activity.owner?.length && <p className="text-[10px] font-bold text-pink-500">🚗 {activity.owner.join(", ")}</p>}
                     {!!activity.collector?.length && <p className="text-[10px] font-bold text-amber-600">🏠 {activity.collector.join(", ")}</p>}
+                    {activity.recurring === "weekly" && <p className="text-[10px] font-bold text-violet-500">🔁 Weekly</p>}
                     {activity.notes && <p className="text-[10px] font-bold text-slate-400">📝 Note</p>}
                   </div>
                   <div className="shrink-0 text-right">

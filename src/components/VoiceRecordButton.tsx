@@ -174,8 +174,8 @@ export default function VoiceRecordButton() {
           listening
             ? "animate-pulse bg-red-500 text-white ring-4 ring-red-200"
             : processing
-            ? "bg-indigo-300 text-white"
-            : "bg-gradient-to-r from-indigo-600 via-pink-500 to-amber-400 text-white"
+            ? "bg-violet-300 text-white"
+            : "bg-gradient-to-r from-violet-600 via-pink-500 to-amber-400 text-white"
         }`}
       >
         {listening ? "🎤" : processing ? "⏳" : "🎙"}
@@ -186,7 +186,7 @@ export default function VoiceRecordButton() {
           className={`absolute bottom-[4.5rem] w-64 rounded-xl px-3 py-2.5 text-center text-[11px] font-semibold shadow-lg ${
             isError
               ? "bg-red-50 text-red-600 border border-red-100"
-              : "bg-indigo-50 text-indigo-700 border border-indigo-100"
+              : "bg-violet-50 text-violet-700 border border-violet-100"
           }`}
         >
           {message}
