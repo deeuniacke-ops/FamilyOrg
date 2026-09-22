@@ -79,13 +79,26 @@ export default function ManagePage() {
 
       <div className="space-y-3 mb-7">
         {children.map((child) => (
-          <div key={child.id} className="bg-white rounded-2xl shadow-card p-4 flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center text-slate-700 font-bold" style={{ backgroundColor: child.color }}>{child.initials}</div>
-            <div className="flex-1">
-              <input defaultValue={child.name} onBlur={(e) => { updateChild(child.id, { name: e.target.value, initials: initials(e.target.value) }); refresh(); }} className="font-bold text-slate-800 w-full outline-none" />
-              <p className="text-xs text-slate-400">Age <input defaultValue={child.age ?? ""} placeholder="—" type="number" onBlur={(e) => { updateChild(child.id, { age: e.target.value ? Number(e.target.value) : undefined }); refresh(); }} className="w-10 outline-none" /></p>
+          <div key={child.id} className="bg-white rounded-2xl shadow-card p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center text-slate-700 font-bold shrink-0" style={{ backgroundColor: child.color }}>{child.initials}</div>
+              <div className="flex-1 min-w-0">
+                <input defaultValue={child.name} onBlur={(e) => { updateChild(child.id, { name: e.target.value, initials: initials(e.target.value) }); refresh(); }} className="font-bold text-slate-800 w-full outline-none" />
+                <p className="text-xs text-slate-400">Age <input defaultValue={child.age ?? ""} placeholder="—" type="number" onBlur={(e) => { updateChild(child.id, { age: e.target.value ? Number(e.target.value) : undefined }); refresh(); }} className="w-10 outline-none" /></p>
+              </div>
+              <button onClick={() => { removeChild(child.id); refresh(); }} className="text-xs text-red-400 font-bold shrink-0">Remove</button>
             </div>
-            <button onClick={() => { removeChild(child.id); refresh(); }} className="text-xs text-red-400 font-bold">Remove</button>
+            <div className="flex gap-1.5 mt-3 pl-[60px]">
+              {colours.map((c) => (
+                <button
+                  key={c}
+                  aria-label={`Set color ${c}`}
+                  onClick={() => { updateChild(child.id, { color: c }); refresh(); }}
+                  className={`w-6 h-6 rounded-full transition-all ${child.color === c ? "ring-2 ring-offset-1 ring-violet-400" : ""}`}
+                  style={{ backgroundColor: c }}
+                />
+              ))}
+            </div>
           </div>
         ))}
       </div>
