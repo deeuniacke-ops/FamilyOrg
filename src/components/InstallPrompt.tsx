@@ -56,19 +56,19 @@ export default function InstallPrompt() {
   if (!visible) return null;
 
   return (
-    <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3">
-      <p className="text-xs font-medium text-violet-700">
+    <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3">
+      <p className="text-xs font-medium text-indigo-700">
         {isIOS
           ? <>Tap <strong>Share</strong> then <strong>Add to Home Screen</strong> to install Clann</>
           : <>Install Clann on this device for quick access</>}
       </p>
       <div className="flex shrink-0 items-center gap-2">
         {!isIOS && (
-          <button onClick={install} className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-bold text-white">
+          <button onClick={install} className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white">
             Install
           </button>
         )}
-        <button onClick={dismiss} aria-label="Dismiss" className="text-xs font-bold text-violet-400">✕</button>
+        <button onClick={dismiss} aria-label="Dismiss" className="text-xs font-bold text-indigo-400">✕</button>
       </div>
     </div>
   );

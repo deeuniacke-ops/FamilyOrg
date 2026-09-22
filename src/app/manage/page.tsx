@@ -55,10 +55,10 @@ export default function ManagePage() {
         <h3 className="font-bold text-slate-800 mb-2">Family Name</h3>
         <div className="flex gap-2">
           <input value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder="Your family name" className="min-w-0 flex-1 p-3 rounded-xl border-2 border-gray-200 text-sm" />
-          <button onClick={() => { saveFamilyName(familyName.trim() || "Family"); refresh(); }} className="px-4 rounded-xl bg-violet-600 text-white text-sm font-bold">Save</button>
+          <button onClick={() => { saveFamilyName(familyName.trim() || "Family"); refresh(); }} className="px-4 rounded-xl bg-indigo-600 text-white text-sm font-bold">Save</button>
         </div>
         <p className="text-[10px] text-slate-400 mt-1.5">Shown in the header banner</p>
-        <button onClick={handleShare} className="mt-3 w-full py-2.5 rounded-xl border-2 border-violet-200 bg-violet-50 text-sm font-bold text-violet-700">
+        <button onClick={handleShare} className="mt-3 w-full py-2.5 rounded-xl border-2 border-indigo-200 bg-indigo-50 text-sm font-bold text-indigo-700">
           🔗 Share family link
         </button>
         {shareStatus && <p className="mt-2 break-all text-[10px] text-slate-400">{shareStatus}</p>}
@@ -95,7 +95,7 @@ export default function ManagePage() {
         <p className="text-[10px] text-slate-400 mb-3">Shown as options when adding or editing an activity</p>
         <div className="flex gap-2 mb-3">
           <input value={helperName} onChange={(e) => setHelperName(e.target.value)} placeholder="Name" onKeyDown={(e) => { if (e.key === "Enter") { addHelper(helperName); setHelperName(""); refresh(); } }} className="min-w-0 flex-1 p-3 rounded-xl border-2 border-gray-200 text-sm" />
-          <button onClick={() => { addHelper(helperName); setHelperName(""); refresh(); }} className="px-4 rounded-xl bg-violet-600 text-white text-sm font-bold">Add</button>
+          <button onClick={() => { addHelper(helperName); setHelperName(""); refresh(); }} className="px-4 rounded-xl bg-indigo-600 text-white text-sm font-bold">Add</button>
         </div>
         <div className="flex flex-wrap gap-2">
           {helpers.map((h) => (

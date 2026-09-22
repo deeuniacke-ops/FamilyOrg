@@ -16,7 +16,7 @@ export default function BottomNav() {
         <Link
           href="/"
           className={`flex min-w-0 flex-1 flex-col items-center py-2 text-xs font-bold ${
-            path === "/" ? "text-violet-600" : "text-slate-400"
+            path === "/" ? "text-indigo-600" : "text-slate-400"
           }`}
         >
           <span className="text-xl leading-5">⌂</span>
@@ -31,20 +31,20 @@ export default function BottomNav() {
           <span
             className={`flex h-14 w-14 items-center justify-center rounded-full text-3xl font-bold shadow-lg transition-all active:scale-95 ${
               path === "/add"
-                ? "bg-violet-700 text-white ring-2 ring-violet-300"
-                : "bg-violet-600 text-white"
+                ? "bg-indigo-700 text-white ring-2 ring-indigo-300"
+                : "bg-indigo-600 text-white"
             }`}
           >
             +
           </span>
-          <span className="mt-1 text-xs font-bold text-violet-600">Add</span>
+          <span className="mt-1 text-xs font-bold text-indigo-600">Add</span>
         </Link>
 
         {/* Family */}
         <Link
           href="/manage"
           className={`flex min-w-0 flex-1 flex-col items-center py-2 text-xs font-bold ${
-            path === "/manage" ? "text-violet-600" : "text-slate-400"
+            path === "/manage" ? "text-indigo-600" : "text-slate-400"
           }`}
         >
           <span className="text-xl leading-5">●</span>

@@ -94,7 +94,7 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
   if (!activity) return (
     <div className="animate-fade-in py-16 text-center">
       <p className="text-slate-400 text-sm">Activity not found</p>
-      <button onClick={() => router.back()} className="mt-4 text-violet-600 text-sm font-bold">Go back</button>
+      <button onClick={() => router.back()} className="mt-4 text-indigo-600 text-sm font-bold">Go back</button>
     </div>
   );
 
@@ -117,7 +117,7 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Family Member(s)</p>
         <div className="flex flex-wrap gap-2 mb-3">
           {children.map((c) => (
-            <button key={c.id} type="button" onClick={() => setChildIds((prev) => prev.includes(c.id) ? prev.filter((x) => x !== c.id) : [...prev, c.id])} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${childIds.includes(c.id) ? "ring-2 ring-violet-500 bg-white shadow" : "bg-gray-100 text-slate-500"}`}>
+            <button key={c.id} type="button" onClick={() => setChildIds((prev) => prev.includes(c.id) ? prev.filter((x) => x !== c.id) : [...prev, c.id])} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${childIds.includes(c.id) ? "ring-2 ring-indigo-500 bg-white shadow" : "bg-gray-100 text-slate-500"}`}>
               <span className="flex h-5 w-5 items-center justify-center rounded-full text-slate-700 text-[9px] font-black" style={{ backgroundColor: c.color }}>{c.initials}</span>
               {c.name}
             </button>
@@ -125,12 +125,12 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
         </div>
 
         {/* Title */}
-        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Activity name" className="w-full mb-3 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-violet-500 focus:outline-none text-sm" />
+        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Activity name" className="w-full mb-3 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-indigo-500 focus:outline-none text-sm" />
 
         {/* Date + time */}
         <div className="flex gap-2 mb-1">
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="flex-1 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 focus:border-violet-500 focus:outline-none text-sm" />
-          <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="w-24 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 focus:border-violet-500 focus:outline-none text-sm" />
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="flex-1 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 focus:border-indigo-500 focus:outline-none text-sm" />
+          <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="w-24 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 focus:border-indigo-500 focus:outline-none text-sm" />
         </div>
         {recurring && <p className="text-[10px] text-slate-400 mb-3">Date/time here apply to the whole weekly series</p>}
         {!recurring && <div className="mb-3" />}
@@ -138,19 +138,19 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
         {/* Duration chips */}
         <div className="flex gap-1.5 mb-3">
           {[30, 60, 90, 120].map((mins) => (
-            <button key={mins} type="button" onClick={() => setDuration(mins)} className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all ${duration === mins ? "bg-violet-600 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
+            <button key={mins} type="button" onClick={() => setDuration(mins)} className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all ${duration === mins ? "bg-indigo-600 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
               {mins < 60 ? `${mins}m` : `${Math.floor(mins / 60)}h${mins % 60 ? ` ${mins % 60}m` : ""}`}
             </button>
           ))}
         </div>
 
         {/* Location */}
-        <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Location (optional)" className="w-full mb-3 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-violet-500 focus:outline-none text-sm" />
+        <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Location (optional)" className="w-full mb-3 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-indigo-500 focus:outline-none text-sm" />
 
         {/* Owner picker */}
         <div className="mb-3">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">🚗 Who&apos;s bringing them? (pick any that apply)</p>
-          {recurring && <p className="text-[10px] text-violet-500 font-semibold mb-1.5 -mt-1">Applies to {occurrenceDate} only - other occurrences keep their own driver</p>}
+          {recurring && <p className="text-[10px] text-indigo-500 font-semibold mb-1.5 -mt-1">Applies to {occurrenceDate} only - other occurrences keep their own driver</p>}
           <div className="flex flex-wrap gap-1.5">
             {helpers.map((o) => (
               <button key={o} type="button" onClick={() => setOwner((prev) => prev.includes(o) ? prev.filter((x) => x !== o) : [...prev, o])} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${owner.includes(o) ? "bg-pink-500 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
@@ -162,7 +162,7 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
 
         {/* Collector (collapsed unless already set) */}
         {!showCollector && (
-          <button type="button" onClick={() => setShowCollector(true)} className="mb-3 text-xs font-bold text-violet-500">
+          <button type="button" onClick={() => setShowCollector(true)} className="mb-3 text-xs font-bold text-indigo-500">
             🏠 + Someone else collecting them?
           </button>
         )}
@@ -185,16 +185,16 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Notes (optional) — e.g. bring shin pads, entrance around the back"
           rows={2}
-          className="w-full mb-3 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-violet-500 focus:outline-none text-sm resize-none"
+          className="w-full mb-3 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-indigo-500 focus:outline-none text-sm resize-none"
         />
 
         {/* Recurring toggle */}
-        <button type="button" onClick={() => setRecurring(!recurring)} className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all ${recurring ? "bg-violet-100 text-violet-600 border-2 border-violet-300" : "bg-gray-50 text-slate-400 border-2 border-gray-200"}`}>
+        <button type="button" onClick={() => setRecurring(!recurring)} className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all ${recurring ? "bg-indigo-100 text-indigo-600 border-2 border-indigo-300" : "bg-gray-50 text-slate-400 border-2 border-gray-200"}`}>
           {recurring ? "🔁 Repeats weekly" : "One-off (tap for weekly)"}
         </button>
       </div>
 
-      <button onClick={handleSave} className="w-full mt-5 py-3.5 rounded-xl bg-violet-600 text-white text-sm font-bold active:bg-violet-700 transition-all shadow-md">
+      <button onClick={handleSave} className="w-full mt-5 py-3.5 rounded-xl bg-indigo-600 text-white text-sm font-bold active:bg-indigo-700 transition-all shadow-md">
         Save Changes
       </button>
 
