@@ -16,7 +16,7 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 rounded-b-3xl bg-gradient-to-br from-violet-100 to-violet-200 px-5 pt-[env(safe-area-inset-top)] shadow-sm">
+    <header className="sticky top-0 z-40 bg-gradient-to-br from-violet-50 to-violet-100 px-5 pt-[env(safe-area-inset-top)] shadow-sm">
       <Link href="/about" className="flex flex-col justify-center gap-0.5 py-3 min-w-0">
         <h1 className="truncate text-xl font-black tracking-tight text-slate-800">
           {mounted ? familyName : ""}
