@@ -110,7 +110,7 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
     return (
       <div className="mx-auto min-h-screen max-w-lg px-6 py-10 animate-fade-in">
         <div className="mb-8 text-center">
-          <h1 className="mb-2 text-4xl font-black tracking-tight text-violet-600">Clann</h1>
+          <h1 className="mb-2 text-4xl font-black tracking-tight text-violet-600">Cluishi</h1>
           <p className="mx-auto max-w-xs text-base font-bold text-slate-700">
             One shared calendar for everyone&apos;s activities
           </p>

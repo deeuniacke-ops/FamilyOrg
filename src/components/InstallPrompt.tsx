@@ -59,8 +59,8 @@ export default function InstallPrompt() {
     <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3">
       <p className="text-xs font-medium text-violet-700">
         {isIOS
-          ? <>Tap <strong>Share</strong> then <strong>Add to Home Screen</strong> to install Clann</>
-          : <>Install Clann on this device for quick access</>}
+          ? <>Tap <strong>Share</strong> then <strong>Add to Home Screen</strong> to install Cluishi</>
+          : <>Install Cluishi on this device for quick access</>}
       </p>
       <div className="flex shrink-0 items-center gap-2">
         {!isIOS && (

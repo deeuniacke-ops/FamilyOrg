@@ -11,8 +11,8 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
   return NextResponse.json(
     {
-      name: "Clann Family Organiser",
-      short_name: "Clann",
+      name: "Cluishi",
+      short_name: "Cluishi",
       description: "One shared calendar for everyone's activities",
       start_url: "/",
       display: "standalone",

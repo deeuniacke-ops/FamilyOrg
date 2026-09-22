@@ -22,7 +22,7 @@ export default function Header() {
           {mounted ? familyName : ""}
         </h1>
         <span className="text-violet-700/70 text-[11px] font-semibold">
-          Clann Family Organiser
+          Cluishi
         </span>
       </Link>
     </header>
