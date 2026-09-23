@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Child, FamilyActivity, getActivities, getActivitiesForDates, getChildren } from "@/lib/family-store";
 import InstallPrompt from "@/components/InstallPrompt";
+import MonthCalendar from "@/components/MonthCalendar";
 
 function dateKey(date: Date) { return date.toISOString().slice(0, 10); }
 function addDays(value: string, days: number) {
@@ -38,7 +39,7 @@ export default function HomePage() {
   const [view, setView] = useState<"list" | "upcoming">("list");
   const [mounted, setMounted] = useState(false);
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
-  const dateInputRef = useRef<HTMLInputElement>(null);
+  const [showMonthCalendar, setShowMonthCalendar] = useState(false);
 
   const today = dateKey(new Date());
   const listDates = Array.from({ length: 7 }, (_, i) => addDays(selectedDate, i));
@@ -101,18 +102,11 @@ export default function HomePage() {
         <button aria-label="Next day" onClick={() => setSelectedDate(addDays(selectedDate, 1))} className="h-9 w-9 rounded-xl border border-slate-200 bg-white text-lg font-bold text-slate-500 shadow-sm">›</button>
         <button
           aria-label="Pick a date"
-          onClick={() => { try { dateInputRef.current?.showPicker(); } catch { dateInputRef.current?.click(); } }}
+          onClick={() => setShowMonthCalendar(true)}
           className="h-9 w-9 rounded-xl border border-slate-200 bg-white text-base text-slate-500 shadow-sm"
         >
           📅
         </button>
-        <input
-          ref={dateInputRef}
-          type="date"
-          value={selectedDate}
-          onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
-          className="absolute h-0 w-0 opacity-0"
-        />
       </div>
 
       <div className="flex flex-col gap-4">
@@ -213,5 +207,13 @@ export default function HomePage() {
     })()}
 
     <div className="mb-20" />
+
+    {showMonthCalendar && (
+      <MonthCalendar
+        selectedDate={selectedDate}
+        onSelectDate={(date) => { setSelectedDate(date); setView("list"); }}
+        onClose={() => setShowMonthCalendar(false)}
+      />
+    )}
   </div>;
 }
