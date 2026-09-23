@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { familyId, body: incomingBody } = await request.json();
+    const { familyId, title: incomingTitle, body: incomingBody } = await request.json();
     if (typeof familyId !== "string" || !familyId) {
       return NextResponse.json({ error: "Missing familyId" }, { status: 400 });
     }
@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
     const letter = letterMatch ? letterMatch[0].toUpperCase() : "C";
     const icon = `${request.nextUrl.origin}/api/family-icon/${letter}/192`;
 
+    const title = typeof incomingTitle === "string" && incomingTitle.trim() ? incomingTitle.trim() : "New activity added";
     const body = typeof incomingBody === "string" && incomingBody.trim() ? incomingBody.trim() : "Check the calendar for details.";
 
     let sent = 0;
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
       try {
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth } },
-          JSON.stringify({ title: "New activity added", body, icon, url: "/" })
+          JSON.stringify({ title, body, icon, url: "/" })
         );
         sent++;
       } catch (err) {

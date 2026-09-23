@@ -263,9 +263,9 @@ function formatActivityDay(date: string): string {
   return new Date(date + "T12:00:00").toLocaleDateString("en-IE", { weekday: "long", day: "numeric", month: "short" });
 }
 
-/** Fire-and-forget — lets other family members' devices know something new
- *  was added, without ever blocking or failing the save itself. */
-function notifyFamilyOfNewActivity(activity: FamilyActivity): void {
+/** Fire-and-forget — lets other family members' devices know about a
+ *  new/cancelled activity, without ever blocking or failing the save itself. */
+function notifyFamily(title: string, activity: { title: string; date: string; childIds: string[] }): void {
   if (typeof window === "undefined" || !activeFamilyId) return;
   const names = activity.childIds
     .map((id) => childrenCache.find((c) => c.id === id)?.name)
@@ -275,7 +275,7 @@ function notifyFamilyOfNewActivity(activity: FamilyActivity): void {
   fetch("/api/push/notify-activity-added", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ familyId: activeFamilyId, body }),
+    body: JSON.stringify({ familyId: activeFamilyId, title, body }),
   }).catch(() => {});
 }
 
@@ -285,7 +285,7 @@ export function addActivity(input: Omit<FamilyActivity, "id">): FamilyActivity {
   activitiesCache = [...activitiesCache, activity];
   set(ACTIVITIES_KEY, activitiesCache);
   fsWrite(() => setDoc(activityDoc(activity.id), clean(withLegacyChildId(activity))));
-  notifyFamilyOfNewActivity(activity);
+  notifyFamily("New activity added", activity);
   return activity;
 }
 export function updateActivity(id: string, updates: Partial<Omit<FamilyActivity, "id">>) {
@@ -334,6 +334,7 @@ export function cancelActivityOccurrence(id: string, date: string) {
   if (!activity) return;
   const excludedDates = [...(activity.excludedDates || []).filter((d) => d !== date), date];
   updateActivity(id, { excludedDates });
+  notifyFamily("Activity cancelled", { ...activity, date });
 }
 
 /** Reverses cancelActivityOccurrence for one date */
@@ -348,6 +349,10 @@ export function uncancelActivityOccurrence(id: string, date: string) {
  *  deleted, just shown struck-through. */
 export function setActivityCancelled(id: string, cancelled: boolean) {
   updateActivity(id, { cancelled: cancelled || undefined });
+  if (cancelled) {
+    const activity = activitiesCache.find((a) => a.id === id);
+    if (activity) notifyFamily("Activity cancelled", activity);
+  }
 }
 
 export { colours };
