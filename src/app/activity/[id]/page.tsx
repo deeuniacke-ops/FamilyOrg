@@ -23,6 +23,8 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [duration, setDuration] = useState(60);
+  const [allDay, setAllDay] = useState(false);
+  const [customDuration, setCustomDuration] = useState(false);
   const [location, setLocation] = useState("");
   const [recurring, setRecurring] = useState(false);
   const [owner, setOwner] = useState<string[]>([]);
@@ -48,6 +50,8 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
       setDate(found.date);
       setTime(found.time);
       setDuration(found.durationMinutes);
+      setAllDay(!!found.allDay);
+      setCustomDuration(![30, 60, 90, 120].includes(found.durationMinutes));
       setLocation(found.location || "");
       setRecurring(isRecurring);
       setOwner(driverOverride?.owner ?? found.owner ?? []);
@@ -67,8 +71,9 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
       childIds,
       title: title.trim(),
       date,
-      time,
-      durationMinutes: duration,
+      time: allDay ? "00:00" : time,
+      durationMinutes: allDay ? 1440 : duration,
+      allDay: allDay || undefined,
       location: location.trim() || undefined,
       recurring: recurring ? "weekly" : undefined,
       notes: notes.trim() || undefined,
@@ -109,7 +114,7 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
 
       <h2 className="text-xl font-bold text-slate-900 mb-1">Edit Activity</h2>
       <p className="text-sm text-slate-400 mb-5">
-        {activityChildren.map((c) => c.name).join(", ")} · {timeLabel(activity.time)} · {occurrenceDate}
+        {activityChildren.map((c) => c.name).join(", ")} · {activity.allDay ? "All day" : timeLabel(activity.time)} · {occurrenceDate}
       </p>
 
       <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-card">
@@ -128,21 +133,53 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
         <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Activity name" className="w-full mb-3 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-violet-500 focus:outline-none text-sm" />
 
         {/* Date + time */}
-        <div className="flex gap-2 mb-1">
+        <div className="flex gap-2 mb-2">
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="flex-1 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 focus:border-violet-500 focus:outline-none text-sm" />
-          <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="w-24 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 focus:border-violet-500 focus:outline-none text-sm" />
+          {!allDay && (
+            <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="w-24 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 focus:border-violet-500 focus:outline-none text-sm" />
+          )}
         </div>
+        <button
+          type="button"
+          onClick={() => setAllDay((v) => !v)}
+          className={`mb-1 flex items-center gap-1.5 text-[11px] font-bold transition-colors ${allDay ? "text-violet-600" : "text-slate-400"}`}
+        >
+          <span className={`flex h-4 w-4 items-center justify-center rounded-md border-2 ${allDay ? "border-violet-600 bg-violet-600 text-white" : "border-gray-300"}`}>
+            {allDay && "✓"}
+          </span>
+          All day
+        </button>
         {recurring && <p className="text-[10px] text-slate-400 mb-3">Date/time here apply to the whole weekly series</p>}
         {!recurring && <div className="mb-3" />}
 
         {/* Duration chips */}
-        <div className="flex gap-1.5 mb-3">
-          {[30, 60, 90, 120].map((mins) => (
-            <button key={mins} type="button" onClick={() => setDuration(mins)} className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all ${duration === mins ? "bg-violet-600 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
-              {mins < 60 ? `${mins}m` : `${Math.floor(mins / 60)}h${mins % 60 ? ` ${mins % 60}m` : ""}`}
-            </button>
-          ))}
-        </div>
+        {!allDay && (
+          <>
+            <div className="flex gap-1.5 mb-3">
+              {[30, 60, 90, 120].map((mins) => (
+                <button key={mins} type="button" onClick={() => { setDuration(mins); setCustomDuration(false); }} className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all ${!customDuration && duration === mins ? "bg-violet-600 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
+                  {mins < 60 ? `${mins}m` : `${Math.floor(mins / 60)}h${mins % 60 ? ` ${mins % 60}m` : ""}`}
+                </button>
+              ))}
+              <button type="button" onClick={() => setCustomDuration(true)} className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all ${customDuration ? "bg-violet-600 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
+                Custom
+              </button>
+            </div>
+            {customDuration && (
+              <div className="flex items-center gap-2 mb-3">
+                <input
+                  type="number"
+                  min={5}
+                  step={5}
+                  value={duration}
+                  onChange={(e) => setDuration(Math.max(5, Number(e.target.value) || 0))}
+                  className="w-20 px-2 py-1.5 rounded-lg border-2 border-gray-200 bg-white text-center text-sm text-slate-900 focus:border-violet-500 focus:outline-none"
+                />
+                <span className="text-xs font-medium text-slate-400">minutes</span>
+              </div>
+            )}
+          </>
+        )}
 
         {/* Location */}
         <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Location (optional)" className="w-full mb-3 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-violet-500 focus:outline-none text-sm" />

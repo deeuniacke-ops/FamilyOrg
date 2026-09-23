@@ -17,6 +17,7 @@ type DraftActivity = {
   date: string;
   time: string;
   duration: number;
+  allDay: boolean;
   location: string;
   recurring: boolean;
   owner: string[];
@@ -25,7 +26,7 @@ type DraftActivity = {
 };
 
 function emptyDraft(): DraftActivity {
-  return { key: Date.now(), childIds: [], title: "", date: todayStr(), time: "10:00", duration: 60, location: "", recurring: false, owner: [], collector: [], notes: "" };
+  return { key: Date.now(), childIds: [], title: "", date: todayStr(), time: "10:00", duration: 60, allDay: false, location: "", recurring: false, owner: [], collector: [], notes: "" };
 }
 
 export default function AddActivityPage() {
@@ -77,6 +78,7 @@ export default function AddActivityPage() {
         date: a.date || todayStr(),
         time: a.time || "10:00",
         duration: a.durationMinutes || 60,
+        allDay: false,
         location: a.location || "",
         recurring: false,
         owner: [],
@@ -186,8 +188,9 @@ export default function AddActivityPage() {
         childIds: d.childIds,
         title: d.title.trim(),
         date: d.date,
-        time: d.time,
-        durationMinutes: d.duration,
+        time: d.allDay ? "00:00" : d.time,
+        durationMinutes: d.allDay ? 1440 : d.duration,
+        allDay: d.allDay || undefined,
         location: d.location.trim() || undefined,
         recurring: d.recurring ? "weekly" : undefined,
         owner: d.owner.length ? d.owner : undefined,
@@ -272,6 +275,7 @@ function ActivityCard({ draft, index, children, helpers, total, onUpdate, onRemo
   onUpdate: (field: keyof DraftActivity, value: string | number | boolean | string[]) => void; onRemove: () => void;
 }) {
   const [showCollector, setShowCollector] = useState(draft.collector.length > 0);
+  const [customDuration, setCustomDuration] = useState(![30, 60, 90, 120].includes(draft.duration));
   const toggleOwner = (o: string) => {
     onUpdate("owner", draft.owner.includes(o) ? draft.owner.filter((x) => x !== o) : [...draft.owner, o]);
   };
@@ -297,18 +301,50 @@ function ActivityCard({ draft, index, children, helpers, total, onUpdate, onRemo
 
       <input type="text" value={draft.title} onChange={(e) => onUpdate("title", e.target.value)} placeholder="Activity name" className="w-full mb-3 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-violet-500 focus:outline-none text-sm" />
 
-      <div className="flex gap-2 mb-3">
+      <div className="flex gap-2 mb-2">
         <input type="date" value={draft.date} onChange={(e) => onUpdate("date", e.target.value)} className="flex-1 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 focus:border-violet-500 focus:outline-none text-sm" />
-        <input type="time" value={draft.time} onChange={(e) => onUpdate("time", e.target.value)} className="w-24 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 focus:border-violet-500 focus:outline-none text-sm" />
+        {!draft.allDay && (
+          <input type="time" value={draft.time} onChange={(e) => onUpdate("time", e.target.value)} className="w-24 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 focus:border-violet-500 focus:outline-none text-sm" />
+        )}
       </div>
+      <button
+        type="button"
+        onClick={() => onUpdate("allDay", !draft.allDay)}
+        className={`mb-3 flex items-center gap-1.5 text-[11px] font-bold transition-colors ${draft.allDay ? "text-violet-600" : "text-slate-400"}`}
+      >
+        <span className={`flex h-4 w-4 items-center justify-center rounded-md border-2 ${draft.allDay ? "border-violet-600 bg-violet-600 text-white" : "border-gray-300"}`}>
+          {draft.allDay && "✓"}
+        </span>
+        All day
+      </button>
 
-      <div className="flex gap-1.5 mb-3">
-        {[30, 60, 90, 120].map((mins) => (
-          <button key={mins} type="button" onClick={() => onUpdate("duration", mins)} className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all ${draft.duration === mins ? "bg-violet-600 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
-            {mins < 60 ? `${mins}m` : `${Math.floor(mins / 60)}h${mins % 60 ? ` ${mins % 60}m` : ""}`}
-          </button>
-        ))}
-      </div>
+      {!draft.allDay && (
+        <>
+          <div className="flex gap-1.5 mb-3">
+            {[30, 60, 90, 120].map((mins) => (
+              <button key={mins} type="button" onClick={() => { onUpdate("duration", mins); setCustomDuration(false); }} className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all ${!customDuration && draft.duration === mins ? "bg-violet-600 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
+                {mins < 60 ? `${mins}m` : `${Math.floor(mins / 60)}h${mins % 60 ? ` ${mins % 60}m` : ""}`}
+              </button>
+            ))}
+            <button type="button" onClick={() => setCustomDuration(true)} className={`flex-1 py-2 rounded-lg text-[11px] font-bold transition-all ${customDuration ? "bg-violet-600 text-white shadow" : "bg-gray-100 text-slate-400"}`}>
+              Custom
+            </button>
+          </div>
+          {customDuration && (
+            <div className="flex items-center gap-2 mb-3">
+              <input
+                type="number"
+                min={5}
+                step={5}
+                value={draft.duration}
+                onChange={(e) => onUpdate("duration", Math.max(5, Number(e.target.value) || 0))}
+                className="w-20 px-2 py-1.5 rounded-lg border-2 border-gray-200 bg-white text-center text-sm text-slate-900 focus:border-violet-500 focus:outline-none"
+              />
+              <span className="text-xs font-medium text-slate-400">minutes</span>
+            </div>
+          )}
+        </>
+      )}
 
       <input type="text" value={draft.location} onChange={(e) => onUpdate("location", e.target.value)} placeholder="Location (optional)" className="w-full mb-3 px-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-slate-900 placeholder:text-slate-300 focus:border-violet-500 focus:outline-none text-sm" />
 

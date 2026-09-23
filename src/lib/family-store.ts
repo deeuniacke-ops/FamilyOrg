@@ -16,6 +16,7 @@ export type FamilyActivity = {
   date: string;
   time: string;
   durationMinutes: number;
+  allDay?: boolean;
   location?: string;
   notes?: string;
   recurring?: "weekly";

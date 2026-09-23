@@ -24,7 +24,7 @@ function sameChildSet(a: string[], b: string[]) {
 function overlapIds(items: FamilyActivity[]) {
   const result = new Set<string>();
   items.forEach((a, i) => items.slice(i + 1).forEach((b) => {
-    if (sameChildSet(a.childIds, b.childIds) || a.date !== b.date) return;
+    if (a.allDay || b.allDay || sameChildSet(a.childIds, b.childIds) || a.date !== b.date) return;
     const as = minutes(a.time), bs = minutes(b.time);
     if (as < bs + b.durationMinutes && bs < as + a.durationMinutes) { result.add(a.id); result.add(b.id); }
   }));
@@ -132,7 +132,7 @@ export default function HomePage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-slate-900">{activity.title}</p>
-                    <p className="text-xs text-slate-500">{activityChildren.map((c) => c.name).join(", ")} · {timeLabel(activity.time)} · {activity.durationMinutes}m</p>
+                    <p className="text-xs text-slate-500">{activityChildren.map((c) => c.name).join(", ")}{activity.allDay ? "" : ` · ${timeLabel(activity.time)} · ${activity.durationMinutes}m`}</p>
                     {activity.location && <p className="text-[11px] text-slate-400">📍 {activity.location}</p>}
                     {!!activity.owner?.length && <p className="text-[10px] font-bold text-pink-500">🚗 {activity.owner.join(", ")}</p>}
                     {!!activity.collector?.length && <p className="text-[10px] font-bold text-amber-600">🏠 {activity.collector.join(", ")}</p>}
@@ -140,7 +140,7 @@ export default function HomePage() {
                     {activity.notes && <p className="text-[10px] font-bold text-slate-400">📝 Note</p>}
                   </div>
                   <div className="shrink-0 text-right">
-                    <p className="text-sm font-black text-slate-700">{activity.time}</p>
+                    <p className="text-sm font-black text-slate-700">{activity.allDay ? "All day" : activity.time}</p>
                     {hasClash && <p className="text-[10px] font-bold text-red-500">⚠ Clash</p>}
                   </div>
                 </Link>;
@@ -183,7 +183,7 @@ export default function HomePage() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-slate-900">{activity.title}</p>
                     <p className="text-xs text-slate-500">{activityChildren.map((c) => c.name).join(", ")} · {dayLabel(activity.date)}</p>
-                    <p className="text-xs text-slate-400">{timeLabel(activity.time)} · {activity.durationMinutes}m</p>
+                    {!activity.allDay && <p className="text-xs text-slate-400">{timeLabel(activity.time)} · {activity.durationMinutes}m</p>}
                     {activity.location && <p className="text-[11px] text-slate-400">📍 {activity.location}</p>}
                     {!!activity.owner?.length && <p className="text-[10px] font-bold text-pink-500">🚗 {activity.owner.join(", ")}</p>}
                     {!!activity.collector?.length && <p className="text-[10px] font-bold text-amber-600">🏠 {activity.collector.join(", ")}</p>}
@@ -192,7 +192,7 @@ export default function HomePage() {
                   </div>
                   <div className="shrink-0 text-right">
                     <p className="text-xs font-bold text-slate-600">{new Date(activity.date + "T12:00:00").toLocaleDateString("en-IE", { day: "numeric", month: "short" })}</p>
-                    <p className="text-sm font-black text-slate-700">{activity.time}</p>
+                    <p className="text-sm font-black text-slate-700">{activity.allDay ? "All day" : activity.time}</p>
                   </div>
                 </Link>;
               })}
