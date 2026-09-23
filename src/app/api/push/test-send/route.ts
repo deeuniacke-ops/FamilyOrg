@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ sent, total: snapshot.size, errors });
   } catch (error) {
     console.error("push test-send error:", error);
-    return NextResponse.json({ error: "Failed to send test notification" }, { status: 500 });
+    const detail = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: `Failed to send test notification: ${detail}` }, { status: 500 });
   }
 }

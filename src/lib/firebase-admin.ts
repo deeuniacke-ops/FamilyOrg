@@ -9,6 +9,11 @@ export function getAdminDb() {
     const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
     if (!raw) throw new Error("FIREBASE_SERVICE_ACCOUNT is not set");
     const serviceAccount = JSON.parse(raw);
+    // Pasting the key JSON through a web UI can turn the private key's real
+    // newlines into literal "\n" text — normalize back before use.
+    if (typeof serviceAccount.private_key === "string") {
+      serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
+    }
     initializeApp({ credential: cert(serviceAccount) });
   }
   return getFirestore();
