@@ -1,6 +1,16 @@
 import { db } from "./firebase";
 import { collection, doc, onSnapshot, setDoc, deleteDoc, deleteField, writeBatch } from "firebase/firestore";
 import { occursOnDate } from "./recurrence";
+import { showToast } from "@/components/Toast";
+
+/** Surfaces a sync failure instead of silently leaving stale/incomplete
+ *  local data with no explanation of why it stopped updating. */
+function onSyncError(what: string) {
+  return (error: Error) => {
+    console.error(`Firestore listener error (${what}):`, error);
+    showToast("Lost connection to server — using local data", "error");
+  };
+}
 
 export type Child = {
   id: string;
@@ -151,7 +161,7 @@ export function initFamilySync(familyId: string, seedDisplayName?: string) {
     childrenCache = snapshot.docs.map((d) => d.data() as Child);
     set(CHILDREN_KEY, childrenCache);
     notify();
-  }));
+  }, onSyncError("children")));
   unsubscribers.push(onSnapshot(activitiesCol(), (snapshot) => {
     activitiesCache = snapshot.docs.map((d) => {
       const data = d.data() as FamilyActivity;
@@ -159,7 +169,7 @@ export function initFamilySync(familyId: string, seedDisplayName?: string) {
     });
     set(ACTIVITIES_KEY, activitiesCache);
     notify();
-  }));
+  }, onSyncError("activities")));
   unsubscribers.push(onSnapshot(familySettingsDoc(), (snapshot) => {
     const name = snapshot.data()?.name;
     if (typeof name === "string") {
@@ -169,7 +179,7 @@ export function initFamilySync(familyId: string, seedDisplayName?: string) {
     } else if (seedDisplayName && !snapshot.exists()) {
       fsWrite(() => setDoc(familySettingsDoc(), { name: seedDisplayName }, { merge: true }));
     }
-  }));
+  }, onSyncError("settings")));
   unsubscribers.push(onSnapshot(helpersDoc(), (snapshot) => {
     const names = snapshot.data()?.names;
     if (Array.isArray(names)) {
@@ -179,7 +189,7 @@ export function initFamilySync(familyId: string, seedDisplayName?: string) {
     } else if (!snapshot.exists()) {
       fsWrite(() => setDoc(helpersDoc(), { names: DEFAULT_HELPERS }, { merge: true }));
     }
-  }));
+  }, onSyncError("helpers")));
 }
 
 export function getFamilyName(): string { return familyNameCache; }
