@@ -88,7 +88,16 @@ export default function HomePage() {
     {view === "list" && <>
       <div className="mb-3 flex items-center gap-2">
         <button aria-label="Previous day" onClick={() => setSelectedDate(addDays(selectedDate, -1))} className="h-9 w-9 rounded-xl border border-slate-200 bg-white text-lg font-bold text-slate-500 shadow-sm">‹</button>
-        <div className="flex-1 text-center"><p className="text-sm font-black text-slate-800">{dateSummary(selectedDate)}</p><p className="text-[10px] font-medium text-slate-400">{selectedDate === today ? "Today" : ""}</p></div>
+        <div className="flex flex-1 items-center justify-center gap-2">
+          <p className="text-sm font-black text-slate-800">{dateSummary(selectedDate)}</p>
+          {selectedDate === today ? (
+            <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-600">Today</span>
+          ) : (
+            <button onClick={() => setSelectedDate(today)} className="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-bold text-violet-500 active:bg-violet-100">
+              Jump to today
+            </button>
+          )}
+        </div>
         <button aria-label="Next day" onClick={() => setSelectedDate(addDays(selectedDate, 1))} className="h-9 w-9 rounded-xl border border-slate-200 bg-white text-lg font-bold text-slate-500 shadow-sm">›</button>
         <button
           aria-label="Pick a date"
@@ -105,20 +114,26 @@ export default function HomePage() {
           className="absolute h-0 w-0 opacity-0"
         />
       </div>
-      <button onClick={() => setSelectedDate(today)} className="mb-3 w-full rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-[10px] font-bold text-violet-700">
-        Today · {new Date(today + "T12:00:00").toLocaleDateString("en-IE", { weekday: "long", day: "numeric", month: "short" })}
-      </button>
 
       <div className="flex flex-col gap-4">
         {listDates.map((date) => {
           const dayActivities = activities.filter((a) => a.date === date).sort((a, b) => a.time.localeCompare(b.time));
           const dayClashes = overlapIds(dayActivities);
           if (!dayActivities.length) return null;
+          const isSelectedDay = date === selectedDate;
           return <section key={date}>
-            <div className="mb-2 flex items-center justify-between">
-              <h3 className="text-sm font-black text-slate-800">{dayLabel(date)}</h3>
-              {dayClashes.size > 0 && <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-600">Clash</span>}
-            </div>
+            {isSelectedDay ? (
+              dayClashes.size > 0 && (
+                <div className="mb-2 flex justify-end">
+                  <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-600">Clash</span>
+                </div>
+              )
+            ) : (
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-sm font-black text-slate-800">{dayLabel(date)}</h3>
+                {dayClashes.size > 0 && <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-600">Clash</span>}
+              </div>
+            )}
             <div className="flex flex-col gap-2">
               {dayActivities.map((activity) => {
                 const activityChildren = children.filter((c) => activity.childIds.includes(c.id));
