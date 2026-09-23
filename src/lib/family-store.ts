@@ -1,6 +1,17 @@
 import { db } from "./firebase";
 import { collection, doc, onSnapshot, setDoc, deleteDoc, deleteField, writeBatch } from "firebase/firestore";
 import { occursOnDate } from "./recurrence";
+
+/** Collision-resistant IDs — Date.now() alone can repeat when several
+ *  records are saved in the same tight loop (e.g. adding a few activities
+ *  at once), and since writes are a full setDoc(), a repeated ID silently
+ *  overwrites the earlier record instead of creating a new one. */
+function generateId(prefix: string): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return `${prefix}-${crypto.randomUUID()}`;
+  }
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
 import { showToast } from "@/components/Toast";
 
 /** Surfaces a sync failure instead of silently leaving stale/incomplete
@@ -218,7 +229,7 @@ export function removeHelper(name: string) {
 
 export function getChildren(): Child[] { return childrenCache; }
 export function addChild(input: Omit<Child, "id">): Child {
-  const child = { ...input, id: `child-${Date.now()}` };
+  const child = { ...input, id: generateId("child") };
   childrenCache = [...childrenCache, child];
   set(CHILDREN_KEY, childrenCache);
   fsWrite(() => setDoc(childDoc(child.id), clean(child)));
@@ -281,7 +292,7 @@ function notifyFamily(title: string, activity: { title: string; date: string; ch
 
 export function getActivities(): FamilyActivity[] { return activitiesCache; }
 export function addActivity(input: Omit<FamilyActivity, "id">): FamilyActivity {
-  const activity = { ...input, id: `activity-${Date.now()}`, durationMinutes: input.durationMinutes || 60 };
+  const activity = { ...input, id: generateId("activity"), durationMinutes: input.durationMinutes || 60 };
   activitiesCache = [...activitiesCache, activity];
   set(ACTIVITIES_KEY, activitiesCache);
   fsWrite(() => setDoc(activityDoc(activity.id), clean(withLegacyChildId(activity))));

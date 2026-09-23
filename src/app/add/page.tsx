@@ -25,8 +25,13 @@ type DraftActivity = {
   notes: string;
 };
 
+// A plain counter, not Date.now() — tapping "+ Add another" quickly can
+// call this multiple times within the same millisecond, and two drafts
+// sharing a key would make edits to one silently apply to both.
+let nextDraftKey = 0;
+
 function emptyDraft(): DraftActivity {
-  return { key: Date.now(), childIds: [], title: "", date: todayStr(), time: "", duration: 60, allDay: false, location: "", recurring: false, owner: [], collector: [], notes: "" };
+  return { key: nextDraftKey++, childIds: [], title: "", date: todayStr(), time: "", duration: 60, allDay: false, location: "", recurring: false, owner: [], collector: [], notes: "" };
 }
 
 export default function AddActivityPage() {
