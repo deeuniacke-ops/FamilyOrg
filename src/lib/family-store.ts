@@ -239,12 +239,24 @@ export function removeChild(id: string) {
   });
 }
 
+/** Fire-and-forget — lets other family members' devices know something new
+ *  was added, without ever blocking or failing the save itself. */
+function notifyFamilyOfNewActivity(title: string): void {
+  if (typeof window === "undefined" || !activeFamilyId) return;
+  fetch("/api/push/notify-activity-added", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ familyId: activeFamilyId, title }),
+  }).catch(() => {});
+}
+
 export function getActivities(): FamilyActivity[] { return activitiesCache; }
 export function addActivity(input: Omit<FamilyActivity, "id">): FamilyActivity {
   const activity = { ...input, id: `activity-${Date.now()}`, durationMinutes: input.durationMinutes || 60 };
   activitiesCache = [...activitiesCache, activity];
   set(ACTIVITIES_KEY, activitiesCache);
   fsWrite(() => setDoc(activityDoc(activity.id), clean(withLegacyChildId(activity))));
+  notifyFamilyOfNewActivity(activity.title);
   return activity;
 }
 export function updateActivity(id: string, updates: Partial<Omit<FamilyActivity, "id">>) {
