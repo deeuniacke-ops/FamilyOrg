@@ -181,7 +181,7 @@ export default function AddActivityPage() {
   };
 
   const handleSaveAll = () => {
-    const valid = drafts.filter((d) => d.childIds.length && d.title.trim() && d.date && d.time);
+    const valid = drafts.filter((d) => d.childIds.length && d.title.trim() && d.date && (d.time || d.allDay));
     if (!valid.length) return;
     for (const d of valid) {
       addActivity({
@@ -201,7 +201,7 @@ export default function AddActivityPage() {
     router.push("/");
   };
 
-  const validCount = drafts.filter((d) => d.childIds.length && d.title.trim() && d.date && d.time).length;
+  const validCount = drafts.filter((d) => d.childIds.length && d.title.trim() && d.date && (d.time || d.allDay)).length;
 
   if (!mounted) return null;
 

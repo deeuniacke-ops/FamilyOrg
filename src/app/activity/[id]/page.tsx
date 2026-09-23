@@ -66,7 +66,7 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
   }, [id, searchParams]);
 
   const handleSave = () => {
-    if (!childIds.length || !title.trim() || !date || !time) return;
+    if (!childIds.length || !title.trim() || !date || !(time || allDay)) return;
     updateActivity(id, {
       childIds,
       title: title.trim(),
