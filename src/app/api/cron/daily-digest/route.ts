@@ -18,6 +18,9 @@ export async function GET(request: NextRequest) {
     if (type !== "morning" && type !== "evening") {
       return NextResponse.json({ error: "Missing or invalid ?type" }, { status: 400 });
     }
+    // For manual re-testing only — still requires the same secret, so this
+    // isn't a public bypass, just skips the "already sent today" guard.
+    const force = request.nextUrl.searchParams.get("force") === "true";
 
     const vapidPublic = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
     const vapidPrivate = process.env.VAPID_PRIVATE_KEY;
@@ -61,7 +64,7 @@ export async function GET(request: NextRequest) {
     for (const [familyId, activities] of byFamily) {
       // Dedup — skip if this family already got today's digest of this type
       const dedupRef = db.collection("families").doc(familyId).collection("notifiedDigests").doc(`${targetDate}_${type}`);
-      if ((await dedupRef.get()).exists) continue;
+      if (!force && (await dedupRef.get()).exists) continue;
 
       const subsSnap = await db.collection("families").doc(familyId).collection("pushSubscriptions").get();
       if (subsSnap.empty) continue;
