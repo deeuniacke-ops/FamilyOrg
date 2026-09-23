@@ -10,7 +10,10 @@ self.addEventListener("push", (event) => {
     self.registration.showNotification(data.title, {
       body: data.body,
       icon: data.icon,
-      badge: data.icon,
+      // No "badge" — Android's status-bar slot needs a plain white
+      // silhouette on transparent background; our full-colour gradient
+      // icon renders as a blank white square there. Omit it and let
+      // Android fall back to its own default rather than a broken image.
       data: { url: data.url || "/" },
     })
   );
