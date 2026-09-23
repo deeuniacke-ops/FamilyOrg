@@ -5,6 +5,7 @@ import {
   setFamilyName as saveFamilyName, removeChild, removeHelper, updateChild, Child,
 } from "@/lib/family-store";
 import { leaveFamily, getStoredFamilyId } from "@/lib/family-id";
+import { getPushStatus, subscribeToPush, unsubscribeFromPush, PushStatus } from "@/lib/push";
 
 export default function ManagePage() {
   const [children, setChildren] = useState<Child[]>([]);
@@ -14,13 +15,44 @@ export default function ManagePage() {
   const [age, setAge] = useState("");
   const [familyName, setFamilyName] = useState("");
   const [shareStatus, setShareStatus] = useState("");
+  const [pushStatus, setPushStatus] = useState<PushStatus | "loading">("loading");
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushMessage, setPushMessage] = useState("");
 
   const refresh = () => { setChildren(getChildren()); setHelpers(getHelpers()); setFamilyName(getFamilyName()); };
   useEffect(() => {
     refresh();
+    getPushStatus().then(setPushStatus);
     window.addEventListener("family-sync", refresh);
     return () => window.removeEventListener("family-sync", refresh);
   }, []);
+
+  const handleEnableNotifications = async () => {
+    setPushBusy(true);
+    setPushMessage("");
+    try {
+      const result = await subscribeToPush();
+      if (!result.ok) setPushMessage(result.message || "Couldn't enable notifications.");
+    } catch (err) {
+      console.error("Enable notifications failed:", err);
+      setPushMessage("Something went wrong enabling notifications.");
+    } finally {
+      setPushStatus(await getPushStatus().catch(() => "unsupported" as const));
+      setPushBusy(false);
+    }
+  };
+
+  const handleDisableNotifications = async () => {
+    setPushBusy(true);
+    try {
+      await unsubscribeFromPush();
+    } catch (err) {
+      console.error("Disable notifications failed:", err);
+    } finally {
+      setPushStatus(await getPushStatus().catch(() => "unsupported" as const));
+      setPushBusy(false);
+    }
+  };
 
   const initials = (n: string) => n.split(/\s+/).map((x) => x[0]).join("").slice(0, 2).toUpperCase();
 
@@ -63,6 +95,25 @@ export default function ManagePage() {
         </button>
         {shareStatus && <p className="mt-2 break-all text-[10px] text-slate-400">{shareStatus}</p>}
         <p className="text-[10px] text-slate-400 mt-1.5">Anyone who opens this link joins this exact family &mdash; no need to type the name or passphrase</p>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-card p-4 mb-6">
+        <h3 className="font-bold text-slate-800 mb-1">Notifications</h3>
+        <p className="text-[10px] text-slate-400 mb-3">Get a reminder on this device shortly before an activity starts</p>
+        {pushStatus === "loading" && <p className="text-xs text-slate-400">Checking&hellip;</p>}
+        {pushStatus === "unsupported" && <p className="text-xs text-slate-400">Not supported in this browser.</p>}
+        {pushStatus === "denied" && <p className="text-xs text-slate-400">Notifications are blocked for this site in your browser settings.</p>}
+        {(pushStatus === "unsubscribed") && (
+          <button onClick={handleEnableNotifications} disabled={pushBusy} className="w-full py-2.5 rounded-xl bg-violet-600 text-white text-sm font-bold disabled:opacity-40">
+            {pushBusy ? "Enabling…" : "Enable on this device"}
+          </button>
+        )}
+        {pushStatus === "subscribed" && (
+          <button onClick={handleDisableNotifications} disabled={pushBusy} className="w-full py-2.5 rounded-xl border-2 border-gray-200 text-slate-500 text-sm font-bold disabled:opacity-40">
+            {pushBusy ? "Disabling…" : "✓ Enabled on this device — tap to turn off"}
+          </button>
+        )}
+        {pushMessage && <p className="mt-2 text-[11px] text-red-500">{pushMessage}</p>}
       </div>
 
       <h2 className="text-xl font-bold text-slate-900 mb-1">Manage family</h2>

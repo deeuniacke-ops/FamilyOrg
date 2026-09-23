@@ -27,6 +27,19 @@ service cloud.firestore {
         allow delete: if true;
       }
 
+      // Push subscriptions are write-only from the client (the app never
+      // reads them back — only a server-side job with admin credentials
+      // does, to send reminders) so device endpoints/keys aren't exposed
+      // to anyone who can reach this familyId.
+      match /pushSubscriptions/{subId} {
+        allow read: if false;
+        allow create, update: if
+          request.resource.data.keys().hasAll(['endpoint', 'keys']) &&
+          request.resource.data.endpoint is string &&
+          request.resource.data.keys.keys().hasAll(['p256dh', 'auth']);
+        allow delete: if true;
+      }
+
       match /settings/{docId} {
         allow read: if true;
         allow write: if
