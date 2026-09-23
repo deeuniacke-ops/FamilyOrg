@@ -35,6 +35,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ sent: 0, total: 0, message: "No devices enabled for this family yet." });
     }
 
+    const familySettings = await db.collection("families").doc(familyId).collection("settings").doc("family").get();
+    const familyName = (familySettings.data()?.name as string) || "Family";
+    const letterMatch = familyName.trim().match(/[a-zA-Z]/);
+    const letter = letterMatch ? letterMatch[0].toUpperCase() : "C";
+    const icon = `${request.nextUrl.origin}/api/family-icon/${letter}/192`;
+
     let sent = 0;
     const errors: string[] = [];
     for (const docSnap of snapshot.docs) {
@@ -43,7 +49,7 @@ export async function POST(request: NextRequest) {
       try {
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth } },
-          JSON.stringify({ title: "Cluichí Home", body: "This is a test notification 🎉", url: "/" })
+          JSON.stringify({ title: "Cluichí Home", body: "This is a test notification 🎉", icon, url: "/" })
         );
         sent++;
       } catch (err) {

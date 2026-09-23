@@ -5,6 +5,11 @@ function localDate(d: Date): string {
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 }
 
+function letterFor(name: string): string {
+  const match = name.trim().match(/[a-zA-Z]/);
+  return match ? match[0].toUpperCase() : "C";
+}
+
 export async function GET(request: NextRequest) {
   try {
     // Vercel Cron automatically sends this header when CRON_SECRET is set —
@@ -69,6 +74,10 @@ export async function GET(request: NextRequest) {
       const subsSnap = await db.collection("families").doc(familyId).collection("pushSubscriptions").get();
       if (subsSnap.empty) continue;
 
+      const familySettings = await db.collection("families").doc(familyId).collection("settings").doc("family").get();
+      const familyName = (familySettings.data()?.name as string) || "Family";
+      const icon = `${request.nextUrl.origin}/api/family-icon/${letterFor(familyName)}/192`;
+
       activities.sort((a, b) => (a.allDay ? "" : a.time).localeCompare(b.allDay ? "" : b.time));
       const title = type === "morning" ? "Good morning! ☀️ Here's your day" : "Getting ready for tomorrow";
       const shown = activities.slice(0, 4).map((a) => (a.allDay ? a.title : `${a.time} ${a.title}`));
@@ -81,7 +90,7 @@ export async function GET(request: NextRequest) {
         try {
           await webpush.sendNotification(
             { endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth } },
-            JSON.stringify({ title, body, url: "/" })
+            JSON.stringify({ title, body, icon, url: "/" })
           );
           devicesSent++;
           sentAny = true;
