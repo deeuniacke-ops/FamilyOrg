@@ -67,7 +67,8 @@ export async function subscribeToPush(): Promise<{ ok: boolean; message?: string
     return { ok: true };
   } catch (err) {
     console.error("subscribeToPush failed:", err);
-    return { ok: false, message: "Couldn't enable notifications — try again." };
+    const detail = err instanceof Error ? err.message : String(err);
+    return { ok: false, message: `Couldn't enable notifications: ${detail}` };
   }
 }
 
