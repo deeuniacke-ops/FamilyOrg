@@ -26,7 +26,7 @@ type DraftActivity = {
 };
 
 function emptyDraft(): DraftActivity {
-  return { key: Date.now(), childIds: [], title: "", date: todayStr(), time: "10:00", duration: 60, allDay: false, location: "", recurring: false, owner: [], collector: [], notes: "" };
+  return { key: Date.now(), childIds: [], title: "", date: todayStr(), time: "", duration: 60, allDay: false, location: "", recurring: false, owner: [], collector: [], notes: "" };
 }
 
 export default function AddActivityPage() {
