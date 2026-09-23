@@ -51,6 +51,9 @@ export default function MonthCalendar({
   const monthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString("en-IE", { month: "long", year: "numeric" });
   const leadingBlanks = firstWeekdayOfMonth(viewYear, viewMonth);
   const numDays = daysInMonth(viewYear, viewMonth);
+  // Fixed 6 rows always, so the grid's height (and everything below it)
+  // doesn't shift as you page between shorter and longer months.
+  const trailingBlanks = 42 - leadingBlanks - numDays;
   const selectedKey = dateKey(year, month - 1, day);
 
   return (
@@ -102,6 +105,7 @@ export default function MonthCalendar({
               </button>
             );
           })}
+          {Array.from({ length: trailingBlanks }).map((_, i) => <div key={`t${i}`} />)}
         </div>
       </div>
     </div>
