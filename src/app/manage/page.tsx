@@ -18,6 +18,8 @@ export default function ManagePage() {
   const [pushStatus, setPushStatus] = useState<PushStatus | "loading">("loading");
   const [pushBusy, setPushBusy] = useState(false);
   const [pushMessage, setPushMessage] = useState("");
+  const [testSending, setTestSending] = useState(false);
+  const [testResult, setTestResult] = useState("");
 
   const refresh = () => { setChildren(getChildren()); setHelpers(getHelpers()); setFamilyName(getFamilyName()); };
   useEffect(() => {
@@ -51,6 +53,29 @@ export default function ManagePage() {
     } finally {
       setPushStatus(await getPushStatus().catch(() => "unsupported" as const));
       setPushBusy(false);
+    }
+  };
+
+  const handleSendTest = async () => {
+    const familyId = getStoredFamilyId();
+    if (!familyId) return;
+    setTestSending(true);
+    setTestResult("");
+    try {
+      const res = await fetch("/api/push/test-send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ familyId }),
+      });
+      const data = await res.json();
+      if (!res.ok) setTestResult(data.error || "Couldn't send test notification.");
+      else if (data.sent > 0) setTestResult(`Sent to ${data.sent} device${data.sent !== 1 ? "s" : ""}.`);
+      else setTestResult(data.message || "Nothing sent.");
+    } catch (err) {
+      console.error("Send test notification failed:", err);
+      setTestResult("Couldn't send test notification.");
+    } finally {
+      setTestSending(false);
     }
   };
 
@@ -114,6 +139,14 @@ export default function ManagePage() {
           </button>
         )}
         {pushMessage && <p className="mt-2 text-[11px] text-red-500">{pushMessage}</p>}
+        {pushStatus === "subscribed" && (
+          <>
+            <button onClick={handleSendTest} disabled={testSending} className="w-full mt-2 py-2 rounded-xl border-2 border-violet-200 bg-violet-50 text-xs font-bold text-violet-700 disabled:opacity-40">
+              {testSending ? "Sending…" : "Send a test notification"}
+            </button>
+            {testResult && <p className="mt-2 text-[11px] text-slate-500">{testResult}</p>}
+          </>
+        )}
       </div>
 
       <h2 className="text-xl font-bold text-slate-900 mb-1">Manage family</h2>

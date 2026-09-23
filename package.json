@@ -11,14 +11,17 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.123.0",
     "firebase": "^11.0.2",
+    "firebase-admin": "^14.4.0",
     "next": "^15.0.5",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/web-push": "^3.6.4",
     "eslint": "^8",
     "eslint-config-next": "15.0.3",
     "postcss": "^8",
