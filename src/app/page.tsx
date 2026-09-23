@@ -122,16 +122,9 @@ export default function HomePage() {
           if (!dayActivities.length) return null;
           const isSelectedDay = date === selectedDate;
           return <section key={date}>
-            {isSelectedDay ? (
-              dayClashes.size > 0 && (
-                <div className="mb-2 flex justify-end">
-                  <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-600">Clash</span>
-                </div>
-              )
-            ) : (
-              <div className="mb-2 flex items-center justify-between">
+            {!isSelectedDay && (
+              <div className="mb-2">
                 <h3 className="text-sm font-black text-slate-800">{dayLabel(date)}</h3>
-                {dayClashes.size > 0 && <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-600">Clash</span>}
               </div>
             )}
             <div className="flex flex-col gap-2">
