@@ -33,8 +33,11 @@ export type FamilyActivity = {
   recurring?: "weekly";
   owner?: string[];
   collector?: string[];
-  /** Dates (YYYY-MM-DD) of a weekly-recurring activity that were cancelled
-   *  for that occurrence only - the series itself keeps going */
+  /** Cancelled but kept (struck-through in the UI), never deleted. For a
+   *  one-off activity, or the whole series of a recurring one. */
+  cancelled?: boolean;
+  /** Dates (YYYY-MM-DD) of a weekly-recurring activity where just that
+   *  occurrence was cancelled - shown struck-through, the series continues */
   excludedDates?: string[];
   /** Per-date owner/collector overrides for a weekly-recurring activity, so
    *  editing who's driving one occurrence doesn't change every occurrence */
@@ -324,12 +327,27 @@ export function updateActivityDrivers(id: string, date: string, drivers: { owner
   updateActivity(id, { driverOverrides });
 }
 
-/** Cancels a single occurrence of a recurring activity - the series continues */
+/** Cancels a single occurrence of a recurring activity - shown struck-through,
+ *  the series continues. Not to be confused with deleting it. */
 export function cancelActivityOccurrence(id: string, date: string) {
   const activity = activitiesCache.find((a) => a.id === id);
   if (!activity) return;
-  const excludedDates = [...(activity.excludedDates || []), date];
+  const excludedDates = [...(activity.excludedDates || []).filter((d) => d !== date), date];
   updateActivity(id, { excludedDates });
+}
+
+/** Reverses cancelActivityOccurrence for one date */
+export function uncancelActivityOccurrence(id: string, date: string) {
+  const activity = activitiesCache.find((a) => a.id === id);
+  if (!activity) return;
+  const excludedDates = (activity.excludedDates || []).filter((d) => d !== date);
+  updateActivity(id, { excludedDates: excludedDates.length ? excludedDates : undefined });
+}
+
+/** Cancels a one-off activity, or an entire recurring series - kept, never
+ *  deleted, just shown struck-through. */
+export function setActivityCancelled(id: string, cancelled: boolean) {
+  updateActivity(id, { cancelled: cancelled || undefined });
 }
 
 export { colours };

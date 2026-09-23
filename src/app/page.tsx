@@ -24,7 +24,7 @@ function sameChildSet(a: string[], b: string[]) {
 function overlapIds(items: FamilyActivity[]) {
   const result = new Set<string>();
   items.forEach((a, i) => items.slice(i + 1).forEach((b) => {
-    if (a.allDay || b.allDay || sameChildSet(a.childIds, b.childIds) || a.date !== b.date) return;
+    if (a.cancelled || b.cancelled || a.allDay || b.allDay || sameChildSet(a.childIds, b.childIds) || a.date !== b.date) return;
     const as = minutes(a.time), bs = minutes(b.time);
     if (as < bs + b.durationMinutes && bs < as + a.durationMinutes) { result.add(a.id); result.add(b.id); }
   }));
@@ -132,15 +132,16 @@ export default function HomePage() {
                 const activityChildren = children.filter((c) => activity.childIds.includes(c.id));
                 const hasClash = dayClashes.has(activity.id);
                 const realId = activity.id.replace(/_\d{4}-\d{2}-\d{2}$/, "");
-                return <Link key={activity.id} href={`/activity/${realId}?date=${activity.date}`} className={`flex items-center gap-3 rounded-xl border border-l-4 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors ${hasClash ? "border-red-200" : "border-slate-200"}`} style={{ borderLeftColor: activityChildren[0]?.color }}>
+                return <Link key={activity.id} href={`/activity/${realId}?date=${activity.date}`} className={`flex items-center gap-3 rounded-xl border border-l-4 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors ${activity.cancelled ? "opacity-50" : ""} ${hasClash ? "border-red-200" : "border-slate-200"}`} style={{ borderLeftColor: activityChildren[0]?.color }}>
                   <div className="flex shrink-0 -space-x-2">
                     {activityChildren.map((c) => (
                       <span key={c.id} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-700 text-sm font-black ring-2 ring-white" style={{ backgroundColor: c.color }}>{c.initials}</span>
                     ))}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-slate-900">{activity.title}</p>
+                    <p className={`truncate text-sm font-bold ${activity.cancelled ? "line-through text-slate-400" : "text-slate-900"}`}>{activity.title}</p>
                     <p className="text-xs text-slate-500">{activityChildren.map((c) => c.name).join(", ")}{activity.allDay ? "" : ` · ${timeLabel(activity.time)} · ${activity.durationMinutes}m`}</p>
+                    {activity.cancelled && <p className="text-[10px] font-bold text-amber-600">🚫 Cancelled</p>}
                     {activity.location && <p className="text-[11px] text-slate-400">📍 {activity.location}</p>}
                     {!!activity.owner?.length && <p className="text-[10px] font-bold text-pink-500">🚗 {activity.owner.join(", ")}</p>}
                     {!!activity.collector?.length && <p className="text-[10px] font-bold text-amber-600">🏠 {activity.collector.join(", ")}</p>}
@@ -182,16 +183,17 @@ export default function HomePage() {
               {items.map((activity) => {
                 const activityChildren = children.filter((c) => activity.childIds.includes(c.id));
                 const realId = activity.id.replace(/_\d{4}-\d{2}-\d{2}$/, "");
-                return <Link key={activity.id} href={`/activity/${realId}?date=${activity.date}`} className="flex items-center gap-3 rounded-xl border border-l-4 border-slate-200 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors" style={{ borderLeftColor: activityChildren[0]?.color }}>
+                return <Link key={activity.id} href={`/activity/${realId}?date=${activity.date}`} className={`flex items-center gap-3 rounded-xl border border-l-4 border-slate-200 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors ${activity.cancelled ? "opacity-50" : ""}`} style={{ borderLeftColor: activityChildren[0]?.color }}>
                   <div className="flex shrink-0 -space-x-2">
                     {activityChildren.map((c) => (
                       <span key={c.id} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-700 text-sm font-black ring-2 ring-white" style={{ backgroundColor: c.color }}>{c.initials}</span>
                     ))}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-slate-900">{activity.title}</p>
+                    <p className={`truncate text-sm font-bold ${activity.cancelled ? "line-through text-slate-400" : "text-slate-900"}`}>{activity.title}</p>
                     <p className="text-xs text-slate-500">{activityChildren.map((c) => c.name).join(", ")} · {dayLabel(activity.date)}</p>
                     {!activity.allDay && <p className="text-xs text-slate-400">{timeLabel(activity.time)} · {activity.durationMinutes}m</p>}
+                    {activity.cancelled && <p className="text-[10px] font-bold text-amber-600">🚫 Cancelled</p>}
                     {activity.location && <p className="text-[11px] text-slate-400">📍 {activity.location}</p>}
                     {!!activity.owner?.length && <p className="text-[10px] font-bold text-pink-500">🚗 {activity.owner.join(", ")}</p>}
                     {!!activity.collector?.length && <p className="text-[10px] font-bold text-amber-600">🏠 {activity.collector.join(", ")}</p>}

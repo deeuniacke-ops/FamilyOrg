@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
       if (!familyId) continue;
       const activity = docSnap.data() as FamilyActivity;
       const occurrence = occursOnDate(activity, targetDate);
-      if (!occurrence) continue;
+      if (!occurrence || occurrence.cancelled) continue;
       const list = byFamily.get(familyId) || [];
       list.push({ title: occurrence.title, time: occurrence.time, allDay: occurrence.allDay });
       byFamily.set(familyId, list);

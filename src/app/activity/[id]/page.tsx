@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getActivities, getChildren, getHelpers, updateActivity, removeActivity, cancelActivityOccurrence, updateActivityDrivers, Child, FamilyActivity } from "@/lib/family-store";
+import { getActivities, getChildren, getHelpers, updateActivity, removeActivity, cancelActivityOccurrence, uncancelActivityOccurrence, setActivityCancelled, updateActivityDrivers, Child, FamilyActivity } from "@/lib/family-store";
 
 function timeLabel(time: string) {
   return new Date(`1970-01-01T${time}:00`).toLocaleTimeString("en-IE", { hour: "numeric", minute: "2-digit" });
@@ -90,8 +90,17 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
     router.push("/");
   };
 
-  const handleCancelOccurrence = () => {
-    cancelActivityOccurrence(id, occurrenceDate);
+  const occurrenceCancelled = recurring && !!activity?.excludedDates?.includes(occurrenceDate);
+  const seriesCancelled = !!activity?.cancelled;
+
+  const handleToggleOccurrenceCancel = () => {
+    if (occurrenceCancelled) uncancelActivityOccurrence(id, occurrenceDate);
+    else cancelActivityOccurrence(id, occurrenceDate);
+    router.push("/");
+  };
+
+  const handleToggleSeriesCancel = () => {
+    setActivityCancelled(id, !seriesCancelled);
     router.push("/");
   };
 
@@ -238,10 +247,20 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
       {recurring ? (
         <div className="mt-3 mb-20 flex flex-col gap-2">
           <button
-            onClick={() => { if (confirm(`Cancel just the ${occurrenceDate} occurrence? The rest of the weekly series stays.`)) handleCancelOccurrence(); }}
+            onClick={() => {
+              if (occurrenceCancelled || confirm(`Cancel just the ${occurrenceDate} occurrence? It'll show struck-through — the rest of the weekly series stays.`)) handleToggleOccurrenceCancel();
+            }}
             className="w-full py-3 rounded-xl border-2 border-amber-200 text-amber-600 text-sm font-bold active:bg-amber-50 transition-all"
           >
-            Cancel this occurrence only
+            {occurrenceCancelled ? "Un-cancel this occurrence" : "Cancel this occurrence only"}
+          </button>
+          <button
+            onClick={() => {
+              if (seriesCancelled || confirm("Cancel the entire weekly series? Every occurrence shows struck-through, nothing is deleted.")) handleToggleSeriesCancel();
+            }}
+            className="w-full py-3 rounded-xl border-2 border-amber-200 text-amber-600 text-sm font-bold active:bg-amber-50 transition-all"
+          >
+            {seriesCancelled ? "Un-cancel entire series" : "Cancel entire series"}
           </button>
           <button
             onClick={() => { if (confirm("Delete the entire weekly series? This removes every occurrence, past and future.")) handleDelete(); }}
@@ -251,9 +270,19 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
           </button>
         </div>
       ) : (
-        <button onClick={handleDelete} className="w-full mt-3 mb-20 py-3 rounded-xl border-2 border-red-200 text-red-500 text-sm font-bold active:bg-red-50 transition-all">
-          Delete Activity
-        </button>
+        <div className="mt-3 mb-20 flex flex-col gap-2">
+          <button
+            onClick={() => {
+              if (seriesCancelled || confirm("Cancel this activity? It'll show struck-through instead of being deleted.")) handleToggleSeriesCancel();
+            }}
+            className="w-full py-3 rounded-xl border-2 border-amber-200 text-amber-600 text-sm font-bold active:bg-amber-50 transition-all"
+          >
+            {seriesCancelled ? "Un-cancel Activity" : "Cancel Activity"}
+          </button>
+          <button onClick={handleDelete} className="w-full py-3 rounded-xl border-2 border-red-200 text-red-500 text-sm font-bold active:bg-red-50 transition-all">
+            Delete Activity
+          </button>
+        </div>
       )}
     </div>
   );
