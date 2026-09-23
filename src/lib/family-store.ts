@@ -1,5 +1,6 @@
 import { db } from "./firebase";
 import { collection, doc, onSnapshot, setDoc, deleteDoc, deleteField, writeBatch } from "firebase/firestore";
+import { occursOnDate } from "./recurrence";
 
 export type Child = {
   id: string;
@@ -265,18 +266,9 @@ export function getActivitiesForDates(dates: string[]): FamilyActivity[] {
   const all = getActivities();
   const result: FamilyActivity[] = [];
   for (const date of dates) {
-    const dayOfWeek = new Date(date + "T12:00:00").getDay();
     for (const a of all) {
-      if (a.excludedDates?.includes(date)) continue;
-      const override = a.driverOverrides?.[date];
-      if (a.date === date) {
-        result.push(override ? { ...a, ...override } : a);
-      } else if (a.recurring === "weekly") {
-        const activityDay = new Date(a.date + "T12:00:00").getDay();
-        if (activityDay === dayOfWeek && a.date <= date) {
-          result.push({ ...a, ...(override || {}), id: `${a.id}_${date}`, date });
-        }
-      }
+      const occurrence = occursOnDate(a, date);
+      if (occurrence) result.push(occurrence);
     }
   }
   return result;
