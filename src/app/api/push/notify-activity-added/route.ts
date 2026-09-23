@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { familyId, title } = await request.json();
+    const { familyId, body: incomingBody } = await request.json();
     if (typeof familyId !== "string" || !familyId) {
       return NextResponse.json({ error: "Missing familyId" }, { status: 400 });
     }
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const letter = letterMatch ? letterMatch[0].toUpperCase() : "C";
     const icon = `${request.nextUrl.origin}/api/family-icon/${letter}/192`;
 
-    const body = typeof title === "string" && title.trim() ? title.trim() : "Check the calendar for details.";
+    const body = typeof incomingBody === "string" && incomingBody.trim() ? incomingBody.trim() : "Check the calendar for details.";
 
     let sent = 0;
     for (const subDoc of subsSnap.docs) {

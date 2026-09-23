@@ -249,14 +249,30 @@ export function removeChild(id: string) {
   });
 }
 
+function formatActivityDay(date: string): string {
+  const today = new Date();
+  const todayStr = today.getFullYear() + "-" + String(today.getMonth() + 1).padStart(2, "0") + "-" + String(today.getDate()).padStart(2, "0");
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.getFullYear() + "-" + String(tomorrow.getMonth() + 1).padStart(2, "0") + "-" + String(tomorrow.getDate()).padStart(2, "0");
+  if (date === todayStr) return "today";
+  if (date === tomorrowStr) return "tomorrow";
+  return new Date(date + "T12:00:00").toLocaleDateString("en-IE", { weekday: "long", day: "numeric", month: "short" });
+}
+
 /** Fire-and-forget — lets other family members' devices know something new
  *  was added, without ever blocking or failing the save itself. */
-function notifyFamilyOfNewActivity(title: string): void {
+function notifyFamilyOfNewActivity(activity: FamilyActivity): void {
   if (typeof window === "undefined" || !activeFamilyId) return;
+  const names = activity.childIds
+    .map((id) => childrenCache.find((c) => c.id === id)?.name)
+    .filter((n): n is string => !!n);
+  const when = formatActivityDay(activity.date);
+  const body = names.length ? `${activity.title} — ${names.join(", ")}, ${when}` : `${activity.title} — ${when}`;
   fetch("/api/push/notify-activity-added", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ familyId: activeFamilyId, title }),
+    body: JSON.stringify({ familyId: activeFamilyId, body }),
   }).catch(() => {});
 }
 
@@ -266,7 +282,7 @@ export function addActivity(input: Omit<FamilyActivity, "id">): FamilyActivity {
   activitiesCache = [...activitiesCache, activity];
   set(ACTIVITIES_KEY, activitiesCache);
   fsWrite(() => setDoc(activityDoc(activity.id), clean(withLegacyChildId(activity))));
-  notifyFamilyOfNewActivity(activity.title);
+  notifyFamilyOfNewActivity(activity);
   return activity;
 }
 export function updateActivity(id: string, updates: Partial<Omit<FamilyActivity, "id">>) {
