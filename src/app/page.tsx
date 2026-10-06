@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Child, FamilyActivity, cancelActivityOccurrence, getActivities, getActivitiesForDates, getChildren, removeActivity, setActivityCancelled, setLastViewedDate, uncancelActivityOccurrence } from "@/lib/family-store";
@@ -9,6 +9,7 @@ import MonthCalendar from "@/components/MonthCalendar";
 import SwipeToAct from "@/components/SwipeToAct";
 import ActivityActionSheet from "@/components/ActivityActionSheet";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import SearchBar from "@/components/SearchBar";
 
 function dateKey(date: Date) { return date.toISOString().slice(0, 10); }
 function addDays(value: string, days: number) {
@@ -48,9 +49,7 @@ export default function HomePage() {
   const [showMonthCalendar, setShowMonthCalendar] = useState(false);
   const [actionActivity, setActionActivity] = useState<FamilyActivity | null>(null);
   const [pendingConfirm, setPendingConfirm] = useState<{ message: string; confirmLabel: string; danger?: boolean; onConfirm: () => void } | null>(null);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const today = dateKey(new Date());
   const listDates = Array.from({ length: 7 }, (_, i) => addDays(selectedDate, i));
@@ -149,34 +148,8 @@ export default function HomePage() {
     </div>
 
     {view === "upcoming" && (
-      <div className="mb-3 flex items-center gap-2">
-        {searchOpen ? (
-          <div className="flex flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
-            <span className="text-slate-400">🔍</span>
-            <input
-              ref={searchInputRef}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search activities…"
-              className="flex-1 min-w-0 text-sm text-slate-900 placeholder:text-slate-300 focus:outline-none"
-            />
-            <button
-              aria-label="Close search"
-              onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
-              className="shrink-0 text-slate-400 font-bold"
-            >
-              ✕
-            </button>
-          </div>
-        ) : (
-          <button
-            aria-label="Search activities"
-            onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 0); }}
-            className="ml-auto h-9 w-9 rounded-xl border border-slate-200 bg-white text-base text-slate-500 shadow-sm"
-          >
-            🔍
-          </button>
-        )}
+      <div className="mb-3">
+        <SearchBar value={searchQuery} onChange={setSearchQuery} />
       </div>
     )}
 
