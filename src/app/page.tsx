@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Child, FamilyActivity, getActivities, getActivitiesForDates, getChildren, setLastViewedDate } from "@/lib/family-store";
+import { Child, FamilyActivity, cancelActivityOccurrence, getActivities, getActivitiesForDates, getChildren, removeActivity, setActivityCancelled, setLastViewedDate, uncancelActivityOccurrence } from "@/lib/family-store";
 import InstallPrompt from "@/components/InstallPrompt";
 import MonthCalendar from "@/components/MonthCalendar";
+import SwipeToAct from "@/components/SwipeToAct";
+import ActivityActionSheet from "@/components/ActivityActionSheet";
 
 function dateKey(date: Date) { return date.toISOString().slice(0, 10); }
 function addDays(value: string, days: number) {
@@ -43,6 +45,7 @@ export default function HomePage() {
   const [mounted, setMounted] = useState(false);
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [showMonthCalendar, setShowMonthCalendar] = useState(false);
+  const [actionActivity, setActionActivity] = useState<FamilyActivity | null>(null);
 
   const today = dateKey(new Date());
   const listDates = Array.from({ length: 7 }, (_, i) => addDays(selectedDate, i));
@@ -65,6 +68,33 @@ export default function HomePage() {
   }, [searchParams]);
 
   useEffect(() => { setLastViewedDate(selectedDate); }, [selectedDate]);
+
+  const handleCancelFromSheet = () => {
+    if (!actionActivity) return;
+    const realId = actionActivity.id.replace(/_\d{4}-\d{2}-\d{2}$/, "");
+    const base = getActivities().find((a) => a.id === realId);
+    if (base?.recurring === "weekly") {
+      const occDate = actionActivity.date;
+      if (base.excludedDates?.includes(occDate)) uncancelActivityOccurrence(realId, occDate);
+      else if (confirm(`Cancel just the ${occDate} occurrence? It'll show struck-through — the rest of the weekly series stays.`)) cancelActivityOccurrence(realId, occDate);
+    } else {
+      const seriesCancelled = !!base?.cancelled;
+      if (seriesCancelled || confirm("Cancel this activity? It'll show struck-through instead of being deleted.")) setActivityCancelled(realId, !seriesCancelled);
+    }
+    setActionActivity(null);
+  };
+
+  const handleDeleteFromSheet = () => {
+    if (!actionActivity) return;
+    const realId = actionActivity.id.replace(/_\d{4}-\d{2}-\d{2}$/, "");
+    const base = getActivities().find((a) => a.id === realId);
+    if (base?.recurring === "weekly") {
+      if (confirm("Delete the entire weekly series? This removes every occurrence, past and future.")) removeActivity(realId);
+    } else {
+      removeActivity(realId);
+    }
+    setActionActivity(null);
+  };
 
   if (!mounted) return <div className="py-16 text-center text-slate-400 text-sm">Loading…</div>;
 
@@ -139,27 +169,29 @@ export default function HomePage() {
                 const activityChildren = children.filter((c) => activity.childIds.includes(c.id));
                 const hasClash = dayClashes.has(activity.id);
                 const realId = activity.id.replace(/_\d{4}-\d{2}-\d{2}$/, "");
-                return <Link key={activity.id} href={`/activity/${realId}?date=${activity.date}`} className={`flex items-center gap-3 rounded-xl border border-l-4 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors ${activity.cancelled ? "opacity-50" : ""} ${hasClash ? "border-red-200" : "border-slate-200"}`} style={{ borderLeftColor: activityChildren[0]?.color }}>
-                  <div className="flex shrink-0 -space-x-2">
-                    {activityChildren.map((c) => (
-                      <span key={c.id} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-700 text-sm font-black ring-2 ring-white" style={{ backgroundColor: c.color }}>{c.initials}</span>
-                    ))}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className={`truncate text-sm font-bold ${activity.cancelled ? "line-through text-slate-400" : "text-slate-900"}`}>{activity.title}</p>
-                    <p className="text-xs text-slate-500">{activityChildren.map((c) => c.name).join(", ")}{activity.allDay ? "" : ` · ${timeLabel(activity.time)} · ${activity.durationMinutes}m`}</p>
-                    {activity.cancelled && <p className="text-[10px] font-bold text-amber-600">🚫 Cancelled</p>}
-                    {activity.location && <p className="text-[11px] text-slate-400">📍 {activity.location}</p>}
-                    {!!activity.owner?.length && <p className="text-[10px] font-bold text-pink-500">🚗 {activity.owner.join(", ")}</p>}
-                    {!!activity.collector?.length && <p className="text-[10px] font-bold text-amber-600">🏠 {activity.collector.join(", ")}</p>}
-                    {activity.recurring === "weekly" && <p className="text-[10px] font-bold text-violet-500">🔁 Weekly</p>}
-                    {activity.notes && <p className="text-[10px] font-bold text-slate-400">📝 Note</p>}
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-sm font-black text-slate-700">{activity.allDay ? "All day" : activity.time}</p>
-                    {hasClash && <p className="text-[10px] font-bold text-red-500">⚠ Clash</p>}
-                  </div>
-                </Link>;
+                return <SwipeToAct key={activity.id} onTrigger={() => setActionActivity(activity)}>
+                  <Link href={`/activity/${realId}?date=${activity.date}`} className={`flex items-center gap-3 rounded-xl border border-l-4 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors ${activity.cancelled ? "opacity-50" : ""} ${hasClash ? "border-red-200" : "border-slate-200"}`} style={{ borderLeftColor: activityChildren[0]?.color }}>
+                    <div className="flex shrink-0 -space-x-2">
+                      {activityChildren.map((c) => (
+                        <span key={c.id} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-700 text-sm font-black ring-2 ring-white" style={{ backgroundColor: c.color }}>{c.initials}</span>
+                      ))}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className={`truncate text-sm font-bold ${activity.cancelled ? "line-through text-slate-400" : "text-slate-900"}`}>{activity.title}</p>
+                      <p className="text-xs text-slate-500">{activityChildren.map((c) => c.name).join(", ")}{activity.allDay ? "" : ` · ${timeLabel(activity.time)} · ${activity.durationMinutes}m`}</p>
+                      {activity.cancelled && <p className="text-[10px] font-bold text-amber-600">🚫 Cancelled</p>}
+                      {activity.location && <p className="text-[11px] text-slate-400">📍 {activity.location}</p>}
+                      {!!activity.owner?.length && <p className="text-[10px] font-bold text-pink-500">🚗 {activity.owner.join(", ")}</p>}
+                      {!!activity.collector?.length && <p className="text-[10px] font-bold text-amber-600">🏠 {activity.collector.join(", ")}</p>}
+                      {activity.recurring === "weekly" && <p className="text-[10px] font-bold text-violet-500">🔁 Weekly</p>}
+                      {activity.notes && <p className="text-[10px] font-bold text-slate-400">📝 Note</p>}
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="text-sm font-black text-slate-700">{activity.allDay ? "All day" : activity.time}</p>
+                      {hasClash && <p className="text-[10px] font-bold text-red-500">⚠ Clash</p>}
+                    </div>
+                  </Link>
+                </SwipeToAct>;
               })}
             </div>
           </section>;
@@ -190,28 +222,30 @@ export default function HomePage() {
               {items.map((activity) => {
                 const activityChildren = children.filter((c) => activity.childIds.includes(c.id));
                 const realId = activity.id.replace(/_\d{4}-\d{2}-\d{2}$/, "");
-                return <Link key={activity.id} href={`/activity/${realId}?date=${activity.date}`} className={`flex items-center gap-3 rounded-xl border border-l-4 border-slate-200 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors ${activity.cancelled ? "opacity-50" : ""}`} style={{ borderLeftColor: activityChildren[0]?.color }}>
-                  <div className="flex shrink-0 -space-x-2">
-                    {activityChildren.map((c) => (
-                      <span key={c.id} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-700 text-sm font-black ring-2 ring-white" style={{ backgroundColor: c.color }}>{c.initials}</span>
-                    ))}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className={`truncate text-sm font-bold ${activity.cancelled ? "line-through text-slate-400" : "text-slate-900"}`}>{activity.title}</p>
-                    <p className="text-xs text-slate-500">{activityChildren.map((c) => c.name).join(", ")} · {dayLabel(activity.date)}</p>
-                    {!activity.allDay && <p className="text-xs text-slate-400">{timeLabel(activity.time)} · {activity.durationMinutes}m</p>}
-                    {activity.cancelled && <p className="text-[10px] font-bold text-amber-600">🚫 Cancelled</p>}
-                    {activity.location && <p className="text-[11px] text-slate-400">📍 {activity.location}</p>}
-                    {!!activity.owner?.length && <p className="text-[10px] font-bold text-pink-500">🚗 {activity.owner.join(", ")}</p>}
-                    {!!activity.collector?.length && <p className="text-[10px] font-bold text-amber-600">🏠 {activity.collector.join(", ")}</p>}
-                    {activity.recurring === "weekly" && <p className="text-[10px] font-bold text-violet-500">🔁 Weekly</p>}
-                    {activity.notes && <p className="text-[10px] font-bold text-slate-400">📝 Note</p>}
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-xs font-bold text-slate-600">{new Date(activity.date + "T12:00:00").toLocaleDateString("en-IE", { day: "numeric", month: "short" })}</p>
-                    <p className="text-sm font-black text-slate-700">{activity.allDay ? "All day" : activity.time}</p>
-                  </div>
-                </Link>;
+                return <SwipeToAct key={activity.id} onTrigger={() => setActionActivity(activity)}>
+                  <Link href={`/activity/${realId}?date=${activity.date}`} className={`flex items-center gap-3 rounded-xl border border-l-4 border-slate-200 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors ${activity.cancelled ? "opacity-50" : ""}`} style={{ borderLeftColor: activityChildren[0]?.color }}>
+                    <div className="flex shrink-0 -space-x-2">
+                      {activityChildren.map((c) => (
+                        <span key={c.id} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-700 text-sm font-black ring-2 ring-white" style={{ backgroundColor: c.color }}>{c.initials}</span>
+                      ))}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className={`truncate text-sm font-bold ${activity.cancelled ? "line-through text-slate-400" : "text-slate-900"}`}>{activity.title}</p>
+                      <p className="text-xs text-slate-500">{activityChildren.map((c) => c.name).join(", ")} · {dayLabel(activity.date)}</p>
+                      {!activity.allDay && <p className="text-xs text-slate-400">{timeLabel(activity.time)} · {activity.durationMinutes}m</p>}
+                      {activity.cancelled && <p className="text-[10px] font-bold text-amber-600">🚫 Cancelled</p>}
+                      {activity.location && <p className="text-[11px] text-slate-400">📍 {activity.location}</p>}
+                      {!!activity.owner?.length && <p className="text-[10px] font-bold text-pink-500">🚗 {activity.owner.join(", ")}</p>}
+                      {!!activity.collector?.length && <p className="text-[10px] font-bold text-amber-600">🏠 {activity.collector.join(", ")}</p>}
+                      {activity.recurring === "weekly" && <p className="text-[10px] font-bold text-violet-500">🔁 Weekly</p>}
+                      {activity.notes && <p className="text-[10px] font-bold text-slate-400">📝 Note</p>}
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="text-xs font-bold text-slate-600">{new Date(activity.date + "T12:00:00").toLocaleDateString("en-IE", { day: "numeric", month: "short" })}</p>
+                      <p className="text-sm font-black text-slate-700">{activity.allDay ? "All day" : activity.time}</p>
+                    </div>
+                  </Link>
+                </SwipeToAct>;
               })}
             </div>
           </details>
@@ -226,6 +260,15 @@ export default function HomePage() {
         selectedDate={selectedDate}
         onSelectDate={(date) => { setSelectedDate(date); setView("list"); }}
         onClose={() => setShowMonthCalendar(false)}
+      />
+    )}
+
+    {actionActivity && (
+      <ActivityActionSheet
+        activity={actionActivity}
+        onCancel={handleCancelFromSheet}
+        onDelete={handleDeleteFromSheet}
+        onClose={() => setActionActivity(null)}
       />
     )}
   </div>;
