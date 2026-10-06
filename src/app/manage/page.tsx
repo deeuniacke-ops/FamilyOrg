@@ -95,7 +95,7 @@ export default function ManagePage() {
 
   const handleSendFeedback = () => {
     if (!feedbackText.trim()) return;
-    const subject = encodeURIComponent("Cluiche feedback");
+    const subject = encodeURIComponent("Cluichi feedback");
     const body = encodeURIComponent(feedbackText.trim());
     window.location.href = `mailto:deeuniacke@gmail.com?subject=${subject}&body=${body}`;
     setFeedbackText("");

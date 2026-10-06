@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       try {
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth } },
-          JSON.stringify({ title: "Cluiche Home", body: "This is a test notification 🎉", icon, url: "/" })
+          JSON.stringify({ title: "Cluichi Home", body: "This is a test notification 🎉", icon, url: "/" })
         );
         sent++;
       } catch (err) {
