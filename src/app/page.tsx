@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Child, FamilyActivity, cancelActivityOccurrence, getActivities, getActivitiesForDates, getChildren, removeActivity, setActivityCancelled, setLastViewedDate, uncancelActivityOccurrence } from "@/lib/family-store";
+import { overlapIds } from "@/lib/clashes";
 import InstallPrompt from "@/components/InstallPrompt";
 import MonthCalendar from "@/components/MonthCalendar";
 import SwipeToAct from "@/components/SwipeToAct";
 import ActivityActionSheet from "@/components/ActivityActionSheet";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import SearchBar from "@/components/SearchBar";
+import ShareAgendaButton from "@/components/ShareAgendaButton";
 
 function dateKey(date: Date) { return date.toISOString().slice(0, 10); }
 function addDays(value: string, days: number) {
@@ -21,21 +23,6 @@ function timeLabel(time: string) { return new Date(`1970-01-01T${time}:00`).toLo
 function dayLabel(date: string) { return new Date(date + "T12:00:00").toLocaleDateString("en-IE", { weekday: "long", day: "numeric", month: "short" }); }
 function dateSummary(date: string) { return new Date(date + "T12:00:00").toLocaleDateString("en-IE", { weekday: "long", day: "numeric", month: "short" }); }
 function monthLabel(date: string) { return new Date(date + "T12:00:00").toLocaleDateString("en-IE", { month: "long", year: "numeric" }); }
-function minutes(time: string) { const [h, m] = time.split(":").map(Number); return h * 60 + m; }
-function sameChildSet(a: string[], b: string[]) {
-  if (a.length !== b.length) return false;
-  const setB = new Set(b);
-  return a.every((id) => setB.has(id));
-}
-function overlapIds(items: FamilyActivity[]) {
-  const result = new Set<string>();
-  items.forEach((a, i) => items.slice(i + 1).forEach((b) => {
-    if (a.cancelled || b.cancelled || a.allDay || b.allDay || sameChildSet(a.childIds, b.childIds) || a.date !== b.date) return;
-    const as = minutes(a.time), bs = minutes(b.time);
-    if (as < bs + b.durationMinutes && bs < as + a.durationMinutes) { result.add(a.id); result.add(b.id); }
-  }));
-  return result;
-}
 
 export default function HomePage() {
   const router = useRouter();
@@ -174,6 +161,7 @@ export default function HomePage() {
         >
           📅
         </button>
+        <ShareAgendaButton date={selectedDate} />
       </div>
 
       <div className="flex flex-col gap-4">
