@@ -25,7 +25,8 @@ export async function GET(request: NextRequest) {
   ]);
 
   const children = childrenSnap.docs.map((d) => d.data() as Child);
-  const familyName = (settingsSnap.data()?.name as string) || "Family";
+  const familyName = (settingsSnap.data()?.name as string) || "";
+  const agendaTitle = familyName ? `The ${familyName} Family Agenda` : "Family Agenda";
 
   const occurrences = activitiesSnap.docs
     .map((d) => occursOnDate(d.data() as FamilyActivity, date))
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
         }}>
           <span style={{ fontSize: 34, fontWeight: 800, color: "white" }}>{dateLabel}</span>
           <span style={{ fontSize: 22, fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>
-            The {familyName} Family Agenda
+            {agendaTitle}
           </span>
         </div>
 
