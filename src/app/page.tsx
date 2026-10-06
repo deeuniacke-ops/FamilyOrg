@@ -11,7 +11,6 @@ import SwipeToAct from "@/components/SwipeToAct";
 import ActivityActionSheet from "@/components/ActivityActionSheet";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import SearchBar from "@/components/SearchBar";
-import ShareAgendaButton from "@/components/ShareAgendaButton";
 
 function dateKey(date: Date) { return date.toISOString().slice(0, 10); }
 function addDays(value: string, days: number) {
@@ -161,7 +160,6 @@ export default function HomePage() {
         >
           📅
         </button>
-        <ShareAgendaButton date={selectedDate} />
       </div>
 
       <div className="flex flex-col gap-4">
