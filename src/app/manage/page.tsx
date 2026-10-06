@@ -22,6 +22,8 @@ export default function ManagePage() {
   const [testSending, setTestSending] = useState(false);
   const [testResult, setTestResult] = useState("");
   const [confirmingLeave, setConfirmingLeave] = useState(false);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackSent, setFeedbackSent] = useState(false);
 
   const refresh = () => { setChildren(getChildren()); setHelpers(getHelpers()); setFamilyName(getFamilyName()); };
   useEffect(() => {
@@ -91,6 +93,16 @@ export default function ManagePage() {
     refresh();
   };
 
+  const handleSendFeedback = () => {
+    if (!feedbackText.trim()) return;
+    const subject = encodeURIComponent("Cluiche feedback");
+    const body = encodeURIComponent(feedbackText.trim());
+    window.location.href = `mailto:deeuniacke@gmail.com?subject=${subject}&body=${body}`;
+    setFeedbackText("");
+    setFeedbackSent(true);
+    setTimeout(() => setFeedbackSent(false), 4000);
+  };
+
   const handleShare = async () => {
     const fid = getStoredFamilyId();
     if (!fid) return;
@@ -149,6 +161,27 @@ export default function ManagePage() {
             {testResult && <p className="mt-2 text-[11px] text-slate-500">{testResult}</p>}
           </>
         )}
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-card p-4 mb-6">
+        <h3 className="font-bold text-slate-800 mb-1">Feedback &amp; Suggestions</h3>
+        <p className="text-[10px] text-slate-400 mb-3">Spotted a bug or have an idea? Let us know.</p>
+        <textarea
+          value={feedbackText}
+          onChange={(e) => setFeedbackText(e.target.value)}
+          placeholder="What's working, what's not, what would help..."
+          rows={3}
+          className="w-full p-3 rounded-xl border-2 border-gray-200 text-sm mb-2 resize-none"
+        />
+        <button
+          onClick={handleSendFeedback}
+          disabled={!feedbackText.trim()}
+          className="w-full py-2.5 rounded-xl bg-violet-600 text-white text-sm font-bold disabled:opacity-40"
+        >
+          Send Feedback
+        </button>
+        <p className="text-[10px] text-slate-400 mt-1.5">Opens your email app, addressed and ready to send</p>
+        {feedbackSent && <p className="mt-2 text-[11px] text-violet-600 font-semibold">Opening your email app…</p>}
       </div>
 
       <h2 className="text-xl font-bold text-slate-900 mb-1">Manage family</h2>
