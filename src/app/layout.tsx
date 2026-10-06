@@ -10,13 +10,13 @@ export async function generateMetadata(): Promise<Metadata> {
   const letter = match ? match[0].toUpperCase() : "C";
 
   return {
-    title: "Cluishi",
+    title: "Cluiche",
     description: "Family organiser for calendars, routines, activities and family plans",
     manifest: `/api/family-manifest/${letter}`,
     icons: { apple: `/api/family-icon/${letter}/192` },
     appleWebApp: {
       capable: true,
-      title: "Cluishi",
+      title: "Cluiche",
       statusBarStyle: "default",
     },
   };
