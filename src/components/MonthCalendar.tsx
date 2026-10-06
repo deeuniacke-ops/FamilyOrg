@@ -72,7 +72,12 @@ export default function MonthCalendar({
         </div>
 
         <div className="grid grid-cols-7 gap-1">
-          {Array.from({ length: leadingBlanks }).map((_, i) => <div key={`b${i}`} />)}
+          {Array.from({ length: leadingBlanks }).map((_, i) => (
+            <div key={`b${i}`} className="flex flex-col items-center gap-0.5 py-1.5">
+              <span className="h-8 w-8" />
+              <span className="h-3.5 w-3.5" />
+            </div>
+          ))}
           {Array.from({ length: numDays }, (_, i) => i + 1).map((d) => {
             const key = dateKey(viewYear, viewMonth, d);
             const isToday = key === todayKey;
@@ -105,7 +110,12 @@ export default function MonthCalendar({
               </button>
             );
           })}
-          {Array.from({ length: trailingBlanks }).map((_, i) => <div key={`t${i}`} />)}
+          {Array.from({ length: trailingBlanks }).map((_, i) => (
+            <div key={`t${i}`} className="flex flex-col items-center gap-0.5 py-1.5">
+              <span className="h-8 w-8" />
+              <span className="h-3.5 w-3.5" />
+            </div>
+          ))}
         </div>
       </div>
     </div>
