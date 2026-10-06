@@ -20,7 +20,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #8b5cf6 0%, #ec4899 50%, #f59e0b 100%)",
+          background: "linear-gradient(45deg, #8b5cf6 0%, #ec4899 50%, #f59e0b 100%)",
         }}
       >
         <span style={{ fontSize: size * 0.58, fontWeight: 800, color: "white", lineHeight: 1 }}>

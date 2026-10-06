@@ -14,7 +14,7 @@ export default function AppleIcon() {
           alignItems: "center",
           justifyContent: "center",
           borderRadius: 36,
-          background: "linear-gradient(135deg, #8b5cf6 0%, #ec4899 50%, #f59e0b 100%)",
+          background: "linear-gradient(45deg, #8b5cf6 0%, #ec4899 50%, #f59e0b 100%)",
         }}
       >
         <span style={{ fontSize: 110, fontWeight: 800, color: "white", lineHeight: 1 }}>
