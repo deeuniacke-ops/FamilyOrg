@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getActivities, getChildren, getHelpers, updateActivity, removeActivity, cancelActivityOccurrence, uncancelActivityOccurrence, setActivityCancelled, updateActivityDrivers, Child, FamilyActivity } from "@/lib/family-store";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 function timeLabel(time: string) {
   return new Date(`1970-01-01T${time}:00`).toLocaleTimeString("en-IE", { hour: "numeric", minute: "2-digit" });
@@ -32,6 +33,7 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
   const [showCollector, setShowCollector] = useState(false);
   const [notes, setNotes] = useState("");
   const [occurrenceDate, setOccurrenceDate] = useState("");
+  const [pendingConfirm, setPendingConfirm] = useState<{ message: string; confirmLabel: string; danger?: boolean; onConfirm: () => void } | null>(null);
 
   useEffect(() => {
     const kids = getChildren();
@@ -248,7 +250,12 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
         <div className="mt-3 mb-20 flex flex-col gap-2">
           <button
             onClick={() => {
-              if (occurrenceCancelled || confirm(`Cancel just the ${occurrenceDate} occurrence? It'll show struck-through — the rest of the weekly series stays.`)) handleToggleOccurrenceCancel();
+              if (occurrenceCancelled) handleToggleOccurrenceCancel();
+              else setPendingConfirm({
+                message: `Cancel just the ${occurrenceDate} occurrence? It'll show struck-through — the rest of the weekly series stays.`,
+                confirmLabel: "Cancel occurrence",
+                onConfirm: handleToggleOccurrenceCancel,
+              });
             }}
             className="w-full py-3 rounded-xl border-2 border-amber-200 text-amber-600 text-sm font-bold active:bg-amber-50 transition-all"
           >
@@ -256,14 +263,24 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
           </button>
           <button
             onClick={() => {
-              if (seriesCancelled || confirm("Cancel the entire weekly series? Every occurrence shows struck-through, nothing is deleted.")) handleToggleSeriesCancel();
+              if (seriesCancelled) handleToggleSeriesCancel();
+              else setPendingConfirm({
+                message: "Cancel the entire weekly series? Every occurrence shows struck-through, nothing is deleted.",
+                confirmLabel: "Cancel series",
+                onConfirm: handleToggleSeriesCancel,
+              });
             }}
             className="w-full py-3 rounded-xl border-2 border-amber-200 text-amber-600 text-sm font-bold active:bg-amber-50 transition-all"
           >
             {seriesCancelled ? "Un-cancel entire series" : "Cancel entire series"}
           </button>
           <button
-            onClick={() => { if (confirm("Delete the entire weekly series? This removes every occurrence, past and future.")) handleDelete(); }}
+            onClick={() => setPendingConfirm({
+              message: "Delete the entire weekly series? This removes every occurrence, past and future.",
+              confirmLabel: "Delete series",
+              danger: true,
+              onConfirm: handleDelete,
+            })}
             className="w-full py-3 rounded-xl border-2 border-red-200 text-red-500 text-sm font-bold active:bg-red-50 transition-all"
           >
             Delete entire series
@@ -273,7 +290,12 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
         <div className="mt-3 mb-20 flex flex-col gap-2">
           <button
             onClick={() => {
-              if (seriesCancelled || confirm("Cancel this activity? It'll show struck-through instead of being deleted.")) handleToggleSeriesCancel();
+              if (seriesCancelled) handleToggleSeriesCancel();
+              else setPendingConfirm({
+                message: "Cancel this activity? It'll show struck-through instead of being deleted.",
+                confirmLabel: "Cancel activity",
+                onConfirm: handleToggleSeriesCancel,
+              });
             }}
             className="w-full py-3 rounded-xl border-2 border-amber-200 text-amber-600 text-sm font-bold active:bg-amber-50 transition-all"
           >
@@ -283,6 +305,16 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
             Delete Activity
           </button>
         </div>
+      )}
+
+      {pendingConfirm && (
+        <ConfirmDialog
+          message={pendingConfirm.message}
+          confirmLabel={pendingConfirm.confirmLabel}
+          danger={pendingConfirm.danger}
+          onConfirm={() => { pendingConfirm.onConfirm(); setPendingConfirm(null); }}
+          onCancel={() => setPendingConfirm(null)}
+        />
       )}
     </div>
   );

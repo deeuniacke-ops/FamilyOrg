@@ -8,6 +8,7 @@ import InstallPrompt from "@/components/InstallPrompt";
 import MonthCalendar from "@/components/MonthCalendar";
 import SwipeToAct from "@/components/SwipeToAct";
 import ActivityActionSheet from "@/components/ActivityActionSheet";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 function dateKey(date: Date) { return date.toISOString().slice(0, 10); }
 function addDays(value: string, days: number) {
@@ -46,6 +47,7 @@ export default function HomePage() {
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [showMonthCalendar, setShowMonthCalendar] = useState(false);
   const [actionActivity, setActionActivity] = useState<FamilyActivity | null>(null);
+  const [pendingConfirm, setPendingConfirm] = useState<{ message: string; confirmLabel: string; danger?: boolean; onConfirm: () => void } | null>(null);
 
   const today = dateKey(new Date());
   const listDates = Array.from({ length: 7 }, (_, i) => addDays(selectedDate, i));
@@ -73,27 +75,41 @@ export default function HomePage() {
     if (!actionActivity) return;
     const realId = actionActivity.id.replace(/_\d{4}-\d{2}-\d{2}$/, "");
     const base = getActivities().find((a) => a.id === realId);
+    setActionActivity(null);
     if (base?.recurring === "weekly") {
       const occDate = actionActivity.date;
-      if (base.excludedDates?.includes(occDate)) uncancelActivityOccurrence(realId, occDate);
-      else if (confirm(`Cancel just the ${occDate} occurrence? It'll show struck-through — the rest of the weekly series stays.`)) cancelActivityOccurrence(realId, occDate);
+      if (base.excludedDates?.includes(occDate)) { uncancelActivityOccurrence(realId, occDate); return; }
+      setPendingConfirm({
+        message: `Cancel just the ${occDate} occurrence? It'll show struck-through — the rest of the weekly series stays.`,
+        confirmLabel: "Cancel occurrence",
+        onConfirm: () => cancelActivityOccurrence(realId, occDate),
+      });
     } else {
       const seriesCancelled = !!base?.cancelled;
-      if (seriesCancelled || confirm("Cancel this activity? It'll show struck-through instead of being deleted.")) setActivityCancelled(realId, !seriesCancelled);
+      if (seriesCancelled) { setActivityCancelled(realId, false); return; }
+      setPendingConfirm({
+        message: "Cancel this activity? It'll show struck-through instead of being deleted.",
+        confirmLabel: "Cancel activity",
+        onConfirm: () => setActivityCancelled(realId, true),
+      });
     }
-    setActionActivity(null);
   };
 
   const handleDeleteFromSheet = () => {
     if (!actionActivity) return;
     const realId = actionActivity.id.replace(/_\d{4}-\d{2}-\d{2}$/, "");
     const base = getActivities().find((a) => a.id === realId);
+    setActionActivity(null);
     if (base?.recurring === "weekly") {
-      if (confirm("Delete the entire weekly series? This removes every occurrence, past and future.")) removeActivity(realId);
+      setPendingConfirm({
+        message: "Delete the entire weekly series? This removes every occurrence, past and future.",
+        confirmLabel: "Delete series",
+        danger: true,
+        onConfirm: () => removeActivity(realId),
+      });
     } else {
       removeActivity(realId);
     }
-    setActionActivity(null);
   };
 
   if (!mounted) return <div className="py-16 text-center text-slate-400 text-sm">Loading…</div>;
@@ -269,6 +285,16 @@ export default function HomePage() {
         onCancel={handleCancelFromSheet}
         onDelete={handleDeleteFromSheet}
         onClose={() => setActionActivity(null)}
+      />
+    )}
+
+    {pendingConfirm && (
+      <ConfirmDialog
+        message={pendingConfirm.message}
+        confirmLabel={pendingConfirm.confirmLabel}
+        danger={pendingConfirm.danger}
+        onConfirm={() => { pendingConfirm.onConfirm(); setPendingConfirm(null); }}
+        onCancel={() => setPendingConfirm(null)}
       />
     )}
   </div>;

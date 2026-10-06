@@ -6,6 +6,7 @@ import {
 } from "@/lib/family-store";
 import { leaveFamily, getStoredFamilyId } from "@/lib/family-id";
 import { getPushStatus, subscribeToPush, unsubscribeFromPush, PushStatus } from "@/lib/push";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 export default function ManagePage() {
   const [children, setChildren] = useState<Child[]>([]);
@@ -20,6 +21,7 @@ export default function ManagePage() {
   const [pushMessage, setPushMessage] = useState("");
   const [testSending, setTestSending] = useState(false);
   const [testResult, setTestResult] = useState("");
+  const [confirmingLeave, setConfirmingLeave] = useState(false);
 
   const refresh = () => { setChildren(getChildren()); setHelpers(getHelpers()); setFamilyName(getFamilyName()); };
   useEffect(() => {
@@ -204,9 +206,19 @@ export default function ManagePage() {
         </div>
       </div>
 
-      <button onClick={() => { if (confirm("Leave this family? You'll need the family name and passphrase again to come back.")) leaveFamily(); }} className="mt-8 mb-20 w-full py-2.5 rounded-xl border-2 border-gray-200 text-xs font-bold text-slate-400">
+      <button onClick={() => setConfirmingLeave(true)} className="mt-8 mb-20 w-full py-2.5 rounded-xl border-2 border-gray-200 text-xs font-bold text-slate-400">
         Leave family / switch account
       </button>
+
+      {confirmingLeave && (
+        <ConfirmDialog
+          message="Leave this family? You'll need the family name and passphrase again to come back."
+          confirmLabel="Leave family"
+          danger
+          onConfirm={() => { setConfirmingLeave(false); leaveFamily(); }}
+          onCancel={() => setConfirmingLeave(false)}
+        />
+      )}
     </div>
   );
 }
