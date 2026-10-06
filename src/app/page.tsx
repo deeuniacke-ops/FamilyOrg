@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Child, FamilyActivity, getActivities, getActivitiesForDates, getChildren } from "@/lib/family-store";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Child, FamilyActivity, getActivities, getActivitiesForDates, getChildren, setLastViewedDate } from "@/lib/family-store";
 import InstallPrompt from "@/components/InstallPrompt";
 import MonthCalendar from "@/components/MonthCalendar";
 
@@ -33,9 +34,11 @@ function overlapIds(items: FamilyActivity[]) {
 }
 
 export default function HomePage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [children, setChildren] = useState<Child[]>([]);
   const [rawActivities, setRawActivities] = useState<FamilyActivity[]>([]);
-  const [selectedDate, setSelectedDate] = useState(dateKey(new Date()));
+  const [selectedDate, setSelectedDate] = useState(() => searchParams.get("date") || dateKey(new Date()));
   const [view, setView] = useState<"list" | "upcoming">("list");
   const [mounted, setMounted] = useState(false);
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
@@ -52,6 +55,16 @@ export default function HomePage() {
     window.addEventListener("family-sync", refresh);
     return () => window.removeEventListener("family-sync", refresh);
   }, []);
+
+  // Strip a one-time ?date= param (set when arriving here after saving a
+  // new activity) once it's been applied, so refreshing/navigating back
+  // doesn't keep forcing that date.
+  useEffect(() => {
+    if (searchParams.get("date")) router.replace("/");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  useEffect(() => { setLastViewedDate(selectedDate); }, [selectedDate]);
 
   if (!mounted) return <div className="py-16 text-center text-slate-400 text-sm">Loading…</div>;
 

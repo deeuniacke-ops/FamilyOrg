@@ -2,12 +2,16 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { addActivity, getChildren, getHelpers, Child } from "@/lib/family-store";
+import { addActivity, getChildren, getHelpers, getLastViewedDate, Child } from "@/lib/family-store";
 import { parseTranscriptLocally } from "@/lib/voice-parser";
 import { resizeImageToJpeg } from "@/lib/image";
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function defaultDraftDate() {
+  return getLastViewedDate() || todayStr();
 }
 
 type DraftActivity = {
@@ -31,7 +35,7 @@ type DraftActivity = {
 let nextDraftKey = 0;
 
 function emptyDraft(): DraftActivity {
-  return { key: nextDraftKey++, childIds: [], title: "", date: todayStr(), time: "", duration: 60, allDay: false, location: "", recurring: false, owner: [], collector: [], notes: "" };
+  return { key: nextDraftKey++, childIds: [], title: "", date: defaultDraftDate(), time: "", duration: 60, allDay: false, location: "", recurring: false, owner: [], collector: [], notes: "" };
 }
 
 export default function AddActivityPage() {
@@ -203,7 +207,7 @@ export default function AddActivityPage() {
         notes: d.notes.trim() || undefined,
       });
     }
-    router.push("/");
+    router.push(`/?date=${valid[0].date}`);
   };
 
   const validCount = drafts.filter((d) => d.childIds.length && d.title.trim() && d.date && (d.time || d.allDay)).length;

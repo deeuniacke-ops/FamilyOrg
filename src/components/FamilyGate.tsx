@@ -9,6 +9,7 @@ import { FEATURES } from "@/lib/features";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 import Toast from "@/components/Toast";
+import ScrollToTop from "@/components/ScrollToTop";
 
 export default function FamilyGate({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
@@ -177,6 +178,7 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="min-h-screen max-w-lg mx-auto pb-safe">
+      <ScrollToTop />
       <Header />
       <main className="px-4 py-4">{children}</main>
       <BottomNav />

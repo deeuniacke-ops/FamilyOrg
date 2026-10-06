@@ -81,6 +81,7 @@ const CHILDREN_KEY = "familyorg_children";
 const ACTIVITIES_KEY = "familyorg_activities";
 const HELPERS_KEY = "familyorg_helpers";
 const CACHE_OWNER_KEY = "familyorg_cache_owner"; // which familyId the cached keys above belong to
+const LAST_VIEWED_DATE_KEY = "familyorg_last_viewed_date"; // device-local UI preference, not synced to Firestore
 
 /** Default drop-off/collection helpers, seeded once for a brand-new family so existing behaviour doesn't change */
 const DEFAULT_HELPERS = ["Mum", "Dad", "Nana", "Grandad", "Carpool"];
@@ -204,6 +205,15 @@ export function initFamilySync(familyId: string, seedDisplayName?: string) {
       fsWrite(() => setDoc(helpersDoc(), { names: DEFAULT_HELPERS }, { merge: true }));
     }
   }, onSyncError("helpers")));
+}
+
+/** The date (YYYY-MM-DD) the user last had open on the home calendar - used
+ *  so the Add Activity form can default to the day they were looking at. */
+export function getLastViewedDate(): string | null {
+  try { return localStorage.getItem(LAST_VIEWED_DATE_KEY); } catch { return null; }
+}
+export function setLastViewedDate(date: string) {
+  try { localStorage.setItem(LAST_VIEWED_DATE_KEY, date); } catch { /* ignore */ }
 }
 
 export function getFamilyName(): string { return familyNameCache; }
