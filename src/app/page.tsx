@@ -242,7 +242,9 @@ export default function HomePage() {
           <details key={month} className="group" open>
             <summary className="mb-2 flex cursor-pointer list-none items-center justify-between text-sm font-black text-violet-600 uppercase tracking-wider [&::-webkit-details-marker]:hidden">
               <span>{month} <span className="ml-1 text-[10px] font-medium normal-case text-slate-400">({items.length})</span></span>
-              <span className="text-slate-400 transition-transform group-open:rotate-90">›</span>
+              <svg className="shrink-0 text-slate-400 transition-transform group-open:rotate-90" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 6 15 12 9 18" />
+              </svg>
             </summary>
             <div className="flex flex-col gap-2">
               {items.map((activity) => {
