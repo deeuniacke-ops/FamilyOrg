@@ -83,3 +83,4 @@ The `/api/parse-voice` route uses Claude Haiku to parse natural language into ac
 
 ## Environment variables (Vercel)
 - `ANTHROPIC_API_KEY` — optional, for smart voice parsing
+- `ANTHROPIC_MODEL_SCHOOL_CALENDAR` — optional, model used by `/api/parse-school-calendar` (defaults to `claude-sonnet-5`); kept separate from the cheaper model used for single-note photo/voice parsing since reading a whole-year colour-coded calendar grid needs more accuracy

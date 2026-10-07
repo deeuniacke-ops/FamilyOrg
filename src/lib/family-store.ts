@@ -309,6 +309,34 @@ export function addActivity(input: Omit<FamilyActivity, "id">): FamilyActivity {
   notifyFamily("New activity added", activity);
   return activity;
 }
+/** Bulk-adds activities in one write, for flows that create many at once
+ *  (e.g. expanding a school-calendar closure range into individual days).
+ *  One batch write + one summary notification instead of N of each.
+ *  Firestore batched writes cap at 500 ops — well above the ~60-90 days a
+ *  school year's worth of closures produces, so no chunking needed. */
+export function addActivities(inputs: Omit<FamilyActivity, "id">[]): FamilyActivity[] {
+  if (!inputs.length) return [];
+  const activities = inputs.map((input) => ({ ...input, id: generateId("activity"), durationMinutes: input.durationMinutes || 60 }));
+  activitiesCache = [...activitiesCache, ...activities];
+  set(ACTIVITIES_KEY, activitiesCache);
+  fsWrite(async () => {
+    const batch = writeBatch(db);
+    activities.forEach((a) => batch.set(activityDoc(a.id), clean(withLegacyChildId(a))));
+    await batch.commit();
+  });
+  if (typeof window !== "undefined" && activeFamilyId) {
+    fetch("/api/push/notify-activity-added", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        familyId: activeFamilyId,
+        title: "School calendar updated",
+        body: `${activities.length} closure day${activities.length === 1 ? "" : "s"} added to the calendar`,
+      }),
+    }).catch(() => {});
+  }
+  return activities;
+}
 export function updateActivity(id: string, updates: Partial<Omit<FamilyActivity, "id">>) {
   activitiesCache = activitiesCache.map((activity) => activity.id === id ? { ...activity, ...updates } : activity);
   set(ACTIVITIES_KEY, activitiesCache);

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   addChild, addHelper, colours, getChildren, getFamilyName, getHelpers,
   setFamilyName as saveFamilyName, removeChild, removeHelper, updateChild, Child,
@@ -9,6 +10,7 @@ import { getPushStatus, subscribeToPush, unsubscribeFromPush, PushStatus } from 
 import ConfirmDialog from "@/components/ConfirmDialog";
 
 export default function ManagePage() {
+  const router = useRouter();
   const [children, setChildren] = useState<Child[]>([]);
   const [helpers, setHelpers] = useState<string[]>([]);
   const [helperName, setHelperName] = useState("");
@@ -161,6 +163,14 @@ export default function ManagePage() {
             {testResult && <p className="mt-2 text-[11px] text-slate-500">{testResult}</p>}
           </>
         )}
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-card p-4 mb-6">
+        <h3 className="font-bold text-slate-800 mb-1">School Calendar</h3>
+        <p className="text-[10px] text-slate-400 mb-3">Upload a photo of the school's yearly calendar to bulk-add closures and holidays</p>
+        <button onClick={() => router.push("/school-calendar")} className="w-full py-2.5 rounded-xl bg-violet-600 text-white text-sm font-bold">
+          📅 Upload school calendar
+        </button>
       </div>
 
       <div className="bg-white rounded-2xl shadow-card p-4 mb-6">
