@@ -80,7 +80,7 @@ export default function AddActivityPage() {
   const draftsFromParsed = (activities: any[]): DraftActivity[] => {
     return activities
       .filter((a: { childId?: string; title?: string }) => a.childId || a.title)
-      .map((a: { childId?: string; title?: string; date?: string; time?: string; durationMinutes?: number; location?: string }) => ({
+      .map((a: { childId?: string; title?: string; date?: string; time?: string; durationMinutes?: number; location?: string; notes?: string }) => ({
         key: Date.now() + Math.random(),
         childIds: a.childId ? [a.childId] : [],
         title: a.title || "Activity",
@@ -92,7 +92,7 @@ export default function AddActivityPage() {
         recurring: false,
         owner: [],
         collector: [],
-        notes: "",
+        notes: a.notes || "",
       }));
   };
 
