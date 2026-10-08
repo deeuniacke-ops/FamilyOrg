@@ -99,7 +99,7 @@ export default function ManagePage() {
     if (!feedbackText.trim()) return;
     const subject = encodeURIComponent("Cluichi feedback");
     const body = encodeURIComponent(feedbackText.trim());
-    window.location.href = `mailto:deeuniacke@gmail.com?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:cluichiapp@gmail.com?subject=${subject}&body=${body}`;
     setFeedbackText("");
     setFeedbackSent(true);
     setTimeout(() => setFeedbackSent(false), 4000);

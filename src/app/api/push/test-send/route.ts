@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
 
     const { default: webpush } = await import("web-push");
     webpush.setVapidDetails(
-      process.env.VAPID_SUBJECT || "mailto:deeuniacke@gmail.com",
+      process.env.VAPID_SUBJECT || "mailto:cluichiapp@gmail.com",
       vapidPublic,
       vapidPrivate
     );
