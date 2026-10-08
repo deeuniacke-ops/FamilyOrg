@@ -54,8 +54,10 @@ export async function POST(request: NextRequest) {
         sent++;
       } catch (err) {
         const statusCode = (err as { statusCode?: number })?.statusCode;
+        console.error("push test-send: sendNotification failed", { statusCode, err });
         if (statusCode === 404 || statusCode === 410) {
           await docSnap.ref.delete();
+          errors.push("A stale subscription was found and removed — try enabling notifications again.");
         } else {
           errors.push(err instanceof Error ? err.message : String(err));
         }

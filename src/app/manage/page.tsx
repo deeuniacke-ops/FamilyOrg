@@ -76,7 +76,7 @@ export default function ManagePage() {
       const data = await res.json();
       if (!res.ok) setTestResult(data.error || "Couldn't send test notification.");
       else if (data.sent > 0) setTestResult(`Sent to ${data.sent} device${data.sent !== 1 ? "s" : ""}.`);
-      else setTestResult(data.message || "Nothing sent.");
+      else setTestResult(data.message || (data.errors?.length ? data.errors.join("; ") : "Nothing sent."));
     } catch (err) {
       console.error("Send test notification failed:", err);
       setTestResult("Couldn't send test notification.");
