@@ -7,6 +7,9 @@ import {
 } from "@/lib/family-store";
 import { leaveFamily, getStoredFamilyId } from "@/lib/family-id";
 import { getPushStatus, subscribeToPush, unsubscribeFromPush, PushStatus } from "@/lib/push";
+import { getCurrentUser, signInWithGoogle, signOutUser } from "@/lib/auth";
+import { getLinkedMember, linkMemberToHelper, MemberLink } from "@/lib/member-link";
+import type { User } from "firebase/auth";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
 export default function ManagePage() {
@@ -26,13 +29,26 @@ export default function ManagePage() {
   const [confirmingLeave, setConfirmingLeave] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
+  const [authUser, setAuthUser] = useState<User | null>(null);
+  const [linkedMember, setLinkedMember] = useState<MemberLink | null>(null);
+  const [linking, setLinking] = useState(false);
 
-  const refresh = () => { setChildren(getChildren()); setHelpers(getHelpers()); setFamilyName(getFamilyName()); };
+  const refresh = () => {
+    setChildren(getChildren());
+    setHelpers(getHelpers());
+    setFamilyName(getFamilyName());
+    setAuthUser(getCurrentUser());
+    setLinkedMember(getLinkedMember());
+  };
   useEffect(() => {
     refresh();
     getPushStatus().then(setPushStatus);
     window.addEventListener("family-sync", refresh);
-    return () => window.removeEventListener("family-sync", refresh);
+    window.addEventListener("member-sync", refresh);
+    return () => {
+      window.removeEventListener("family-sync", refresh);
+      window.removeEventListener("member-sync", refresh);
+    };
   }, []);
 
   const handleEnableNotifications = async () => {
@@ -105,6 +121,18 @@ export default function ManagePage() {
     setTimeout(() => setFeedbackSent(false), 4000);
   };
 
+  const handleLinkToHelper = async (h: string) => {
+    setLinking(true);
+    try {
+      await linkMemberToHelper(h);
+      refresh();
+    } catch (err) {
+      console.error("Link member failed:", err);
+    } finally {
+      setLinking(false);
+    }
+  };
+
   const handleShare = async () => {
     const fid = getStoredFamilyId();
     if (!fid) return;
@@ -124,6 +152,46 @@ export default function ManagePage() {
 
   return (
     <div className="animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-card p-4 mb-6">
+        <h3 className="font-bold text-slate-800 mb-1">Your account</h3>
+        {!authUser && (
+          <>
+            <p className="text-[10px] text-slate-400 mb-3">Sign in so the app can greet you by name and personalize your reminders</p>
+            <button onClick={() => signInWithGoogle()} className="w-full py-2.5 rounded-xl bg-violet-600 text-white text-sm font-bold">
+              Sign in with Google
+            </button>
+          </>
+        )}
+        {authUser && !linkedMember && (
+          <>
+            <p className="text-[10px] text-slate-400 mb-3">Signed in as {authUser.displayName || authUser.email}. Which one are you?</p>
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {helpers.map((h) => (
+                <button
+                  key={h}
+                  disabled={linking}
+                  onClick={() => handleLinkToHelper(h)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-100 text-slate-500 disabled:opacity-40"
+                >
+                  {h}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => signOutUser()} className="w-full py-2 rounded-xl border-2 border-gray-200 text-xs font-bold text-slate-400">
+              Sign out
+            </button>
+          </>
+        )}
+        {authUser && linkedMember && (
+          <>
+            <p className="text-sm font-bold text-violet-700 mb-2">Signed in as {linkedMember.helperName} ✓</p>
+            <button onClick={() => signOutUser()} className="w-full py-2 rounded-xl border-2 border-gray-200 text-xs font-bold text-slate-400">
+              Sign out
+            </button>
+          </>
+        )}
+      </div>
+
       <div className="bg-white rounded-2xl shadow-card p-4 mb-6">
         <h3 className="font-bold text-slate-800 mb-2">Family Name</h3>
         <div className="flex gap-2">

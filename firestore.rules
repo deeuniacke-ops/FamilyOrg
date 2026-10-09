@@ -7,6 +7,21 @@ service cloud.firestore {
     // no per-user auth — knowing the ID is what "authenticates" you.
     match /families/{familyId} {
 
+      // Optional per-person identity link (uid -> which helper name this
+      // signed-in Google account is), layered on top of the passphrase model
+      // above - the only collection in this file that checks request.auth.
+      // A user may only write their own doc; reads stay open like everything
+      // else here since there's nothing sensitive beyond a name.
+      match /members/{uid} {
+        allow read: if true;
+        allow create, update: if request.auth != null && request.auth.uid == uid &&
+          request.resource.data.keys().hasAll(['helperName']) &&
+          request.resource.data.helperName is string &&
+          request.resource.data.helperName.size() > 0 &&
+          request.resource.data.helperName.size() < 100;
+        allow delete: if request.auth != null && request.auth.uid == uid;
+      }
+
       match /children/{childId} {
         allow read: if true;
         allow create, update: if

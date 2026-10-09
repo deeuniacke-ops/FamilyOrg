@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     // possible here because admin credentials bypass the security rules
     // that (correctly) block this from any normal client.
     const activitiesSnap = await db.collectionGroup("activities").get();
-    const byFamily = new Map<string, { title: string; time: string; allDay?: boolean }[]>();
+    const byFamily = new Map<string, { title: string; time: string; allDay?: boolean; owner?: string[]; collector?: string[] }[]>();
     for (const docSnap of activitiesSnap.docs) {
       const familyId = docSnap.ref.parent.parent?.id;
       if (!familyId) continue;
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
       const occurrence = occursOnDate(activity, targetDate);
       if (!occurrence || occurrence.cancelled) continue;
       const list = byFamily.get(familyId) || [];
-      list.push({ title: occurrence.title, time: occurrence.time, allDay: occurrence.allDay });
+      list.push({ title: occurrence.title, time: occurrence.time, allDay: occurrence.allDay, owner: occurrence.owner, collector: occurrence.collector });
       byFamily.set(familyId, list);
     }
 
@@ -83,14 +83,32 @@ export async function GET(request: NextRequest) {
       const shown = activities.slice(0, 4).map((a) => (a.allDay ? a.title : `${a.time} ${a.title}`));
       const body = shown.join(", ") + (activities.length > 4 ? ` +${activities.length - 4} more` : "");
 
+      // Personalize per-subscription when it's linked to a specific family
+      // member (uid -> helperName) - unlinked subscriptions still get the
+      // generic family-wide digest above, unchanged.
+      const membersSnap = await db.collection("families").doc(familyId).collection("members").get();
+      const helperByUid = new Map(membersSnap.docs.map((d) => [d.id, d.data()?.helperName as string | undefined]));
+
       let sentAny = false;
       for (const subDoc of subsSnap.docs) {
-        const sub = subDoc.data() as { endpoint?: string; keys?: { p256dh?: string; auth?: string } };
+        const sub = subDoc.data() as { endpoint?: string; keys?: { p256dh?: string; auth?: string }; uid?: string };
         if (!sub.endpoint || !sub.keys?.p256dh || !sub.keys?.auth) continue;
+
+        const helperName = sub.uid ? helperByUid.get(sub.uid) : undefined;
+        let sendTitle = title;
+        let sendBody = body;
+        if (helperName) {
+          const mine = activities.filter((a) => a.owner?.includes(helperName) || a.collector?.includes(helperName));
+          if (!mine.length) continue; // personalized + nothing for them today - skip rather than send the generic one
+          sendTitle = type === "morning" ? `Good morning, ${helperName}! ☀️` : `Heads up, ${helperName} — tomorrow`;
+          const shownMine = mine.slice(0, 4).map((a) => (a.allDay ? a.title : `${a.time} ${a.title}`));
+          sendBody = shownMine.join(", ") + (mine.length > 4 ? ` +${mine.length - 4} more` : "");
+        }
+
         try {
           await webpush.sendNotification(
             { endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth } },
-            JSON.stringify({ title, body, icon, url: "/" })
+            JSON.stringify({ title: sendTitle, body: sendBody, icon, url: "/" })
           );
           devicesSent++;
           sentAny = true;

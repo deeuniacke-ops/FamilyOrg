@@ -3,6 +3,7 @@
 import { doc, setDoc, deleteDoc } from "firebase/firestore";
 import { db } from "./firebase";
 import { getStoredFamilyId } from "./family-id";
+import { getCurrentUser } from "./auth";
 
 export type PushStatus = "unsupported" | "denied" | "subscribed" | "unsubscribed";
 
@@ -58,11 +59,13 @@ export async function subscribeToPush(): Promise<{ ok: boolean; message?: string
     }
 
     const subId = await sha256Hex(json.endpoint);
+    const uid = getCurrentUser()?.uid;
     await setDoc(doc(db, "families", familyId, "pushSubscriptions", subId), {
       endpoint: json.endpoint,
       keys: json.keys,
       createdAt: new Date().toISOString(),
       userAgent: navigator.userAgent,
+      ...(uid ? { uid } : {}),
     });
     return { ok: true };
   } catch (err) {

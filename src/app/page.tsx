@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Child, FamilyActivity, cancelActivityOccurrence, getActivities, getActivitiesForDates, getChildren, removeActivity, setActivityCancelled, setLastViewedDate, uncancelActivityOccurrence } from "@/lib/family-store";
 import { overlapIds } from "@/lib/clashes";
 import InstallPrompt from "@/components/InstallPrompt";
+import PersonalGreeting from "@/components/PersonalGreeting";
 import MonthCalendar from "@/components/MonthCalendar";
 import SwipeToAct from "@/components/SwipeToAct";
 import ActivityActionSheet from "@/components/ActivityActionSheet";
@@ -104,6 +105,7 @@ export default function HomePage() {
 
   return <div className="animate-fade-in">
     <InstallPrompt />
+    <PersonalGreeting />
 
     <div className="mb-3 flex gap-1.5 overflow-x-auto p-1 -m-1">
       <button
