@@ -32,6 +32,7 @@ export default function ManagePage() {
   const [authUser, setAuthUser] = useState<User | null>(null);
   const [linkedMember, setLinkedMember] = useState<MemberLink | null>(null);
   const [linking, setLinking] = useState(false);
+  const [signInError, setSignInError] = useState("");
 
   const refresh = () => {
     setChildren(getChildren());
@@ -121,6 +122,16 @@ export default function ManagePage() {
     setTimeout(() => setFeedbackSent(false), 4000);
   };
 
+  const handleSignIn = async () => {
+    setSignInError("");
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      console.error("Sign in failed:", err);
+      setSignInError("Couldn't sign in — try again.");
+    }
+  };
+
   const handleLinkToHelper = async (h: string) => {
     setLinking(true);
     try {
@@ -157,9 +168,10 @@ export default function ManagePage() {
         {!authUser && (
           <>
             <p className="text-[10px] text-slate-400 mb-3">Sign in so the app can greet you by name and personalize your reminders</p>
-            <button onClick={() => signInWithGoogle()} className="w-full py-2.5 rounded-xl bg-violet-600 text-white text-sm font-bold">
+            <button onClick={handleSignIn} className="w-full py-2.5 rounded-xl bg-violet-600 text-white text-sm font-bold">
               Sign in with Google
             </button>
+            {signInError && <p className="mt-2 text-[11px] text-red-500">{signInError}</p>}
           </>
         )}
         {authUser && !linkedMember && (
