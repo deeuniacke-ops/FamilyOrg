@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getActivities, getChildren, getHelpers, updateActivity, removeActivity, cancelActivityOccurrence, uncancelActivityOccurrence, setActivityCancelled, updateActivityDrivers, Child, FamilyActivity } from "@/lib/family-store";
+import { getActivities, getChildren, getHelpers, updateActivity, removeActivity, cancelActivityOccurrence, uncancelActivityOccurrence, setActivityCancelled, updateActivityDrivers, sendActivityReminder, Child, FamilyActivity } from "@/lib/family-store";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
 function timeLabel(time: string) {
@@ -32,6 +32,7 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
   const [collector, setCollector] = useState<string[]>([]);
   const [showCollector, setShowCollector] = useState(false);
   const [notes, setNotes] = useState("");
+  const [sendReminder, setSendReminder] = useState(false);
   const [occurrenceDate, setOccurrenceDate] = useState("");
   const [pendingConfirm, setPendingConfirm] = useState<{ message: string; confirmLabel: string; danger?: boolean; onConfirm: () => void } | null>(null);
 
@@ -69,12 +70,14 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
 
   const handleSave = () => {
     if (!childIds.length || !title.trim() || !date || !(time || allDay)) return;
+    const savedTime = allDay ? "00:00" : time;
+    const savedDuration = allDay ? 1440 : duration;
     updateActivity(id, {
       childIds,
       title: title.trim(),
       date,
-      time: allDay ? "00:00" : time,
-      durationMinutes: allDay ? 1440 : duration,
+      time: savedTime,
+      durationMinutes: savedDuration,
       allDay: allDay || undefined,
       location: location.trim() || undefined,
       recurring: recurring ? "weekly" : undefined,
@@ -83,6 +86,12 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
     });
     if (recurring) {
       updateActivityDrivers(id, occurrenceDate, { owner: owner.length ? owner : undefined, collector: collector.length ? collector : undefined });
+    }
+    if (sendReminder) {
+      sendActivityReminder({
+        title: title.trim(), date, time: savedTime, durationMinutes: savedDuration,
+        allDay: allDay || undefined, childIds, owner: owner.length ? owner : undefined, collector: collector.length ? collector : undefined,
+      });
     }
     router.back();
   };
@@ -237,8 +246,20 @@ export default function ActivityEditPage({ params }: { params: Promise<{ id: str
         />
 
         {/* Recurring toggle */}
-        <button type="button" onClick={() => setRecurring(!recurring)} className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all ${recurring ? "bg-violet-100 text-violet-600 border-2 border-violet-300" : "bg-gray-50 text-slate-400 border-2 border-gray-200"}`}>
+        <button type="button" onClick={() => setRecurring(!recurring)} className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all mb-3 ${recurring ? "bg-violet-100 text-violet-600 border-2 border-violet-300" : "bg-gray-50 text-slate-400 border-2 border-gray-200"}`}>
           {recurring ? "🔁 Repeats weekly" : "One-off (tap for weekly)"}
+        </button>
+
+        {/* Instant reminder push, opt-in — same role-aware ping as Add Activity */}
+        <button
+          type="button"
+          onClick={() => setSendReminder((v) => !v)}
+          className={`flex w-full items-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all ${sendReminder ? "bg-pink-50 text-pink-600 border-2 border-pink-200" : "bg-gray-50 text-slate-400 border-2 border-gray-200"}`}
+        >
+          <span className={`flex h-4 w-4 items-center justify-center rounded-md border-2 ${sendReminder ? "border-pink-600 bg-pink-600 text-white" : "border-gray-300"}`}>
+            {sendReminder && "✓"}
+          </span>
+          📣 Notify who&apos;s involved right now
         </button>
       </div>
 

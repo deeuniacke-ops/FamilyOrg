@@ -339,8 +339,13 @@ export function addActivity(input: Omit<FamilyActivity, "id">): FamilyActivity {
  *  notifyFamily (which fires a generic ping to everyone on every add),
  *  this only reaches people with a matching role (owner/driver/collector)
  *  on this specific activity, with role-aware wording. Fire-and-forget,
- *  same as notifyFamily. */
-export function sendActivityReminder(activity: FamilyActivity): void {
+ *  same as notifyFamily. Accepts just the fields the reminder actually
+ *  needs (not necessarily a saved activity with an id), so both a
+ *  freshly-created activity and an in-place edit can use it. */
+export function sendActivityReminder(activity: {
+  title: string; date: string; time: string; durationMinutes: number;
+  allDay?: boolean; childIds: string[]; owner?: string[]; collector?: string[];
+}): void {
   if (typeof window === "undefined" || !activeFamilyId) return;
   fetch("/api/push/notify-activity-reminder", {
     method: "POST",
