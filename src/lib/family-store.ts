@@ -334,6 +334,21 @@ export function addActivity(input: Omit<FamilyActivity, "id">): FamilyActivity {
   notifyFamily("New activity added", activity);
   return activity;
 }
+
+/** Opt-in, explicit "push a reminder now" for one activity - unlike
+ *  notifyFamily (which fires a generic ping to everyone on every add),
+ *  this only reaches people with a matching role (owner/driver/collector)
+ *  on this specific activity, with role-aware wording. Fire-and-forget,
+ *  same as notifyFamily. */
+export function sendActivityReminder(activity: FamilyActivity): void {
+  if (typeof window === "undefined" || !activeFamilyId) return;
+  fetch("/api/push/notify-activity-reminder", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ familyId: activeFamilyId, activity }),
+  }).catch(() => {});
+}
+
 /** Bulk-adds activities in one write, for flows that create many at once
  *  (e.g. expanding a school-calendar closure range into individual days).
  *  One batch write + one summary notification instead of N of each.

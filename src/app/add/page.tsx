@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { addActivity, getChildren, getHelpers, getLastViewedDate, Child } from "@/lib/family-store";
+import { addActivity, getChildren, getHelpers, getLastViewedDate, sendActivityReminder, Child } from "@/lib/family-store";
 import { parseTranscriptLocally } from "@/lib/voice-parser";
 import { resizeImageToJpeg } from "@/lib/image";
 
@@ -27,6 +27,7 @@ type DraftActivity = {
   owner: string[];
   collector: string[];
   notes: string;
+  sendReminder: boolean;
 };
 
 // A plain counter, not Date.now() — tapping "+ Add another" quickly can
@@ -35,7 +36,7 @@ type DraftActivity = {
 let nextDraftKey = 0;
 
 function emptyDraft(): DraftActivity {
-  return { key: nextDraftKey++, childIds: [], title: "", date: defaultDraftDate(), time: "", duration: 60, allDay: false, location: "", recurring: false, owner: [], collector: [], notes: "" };
+  return { key: nextDraftKey++, childIds: [], title: "", date: defaultDraftDate(), time: "", duration: 60, allDay: false, location: "", recurring: false, owner: [], collector: [], notes: "", sendReminder: false };
 }
 
 export default function AddActivityPage() {
@@ -93,6 +94,7 @@ export default function AddActivityPage() {
         owner: [],
         collector: [],
         notes: a.notes || "",
+        sendReminder: false,
       }));
   };
 
@@ -193,7 +195,7 @@ export default function AddActivityPage() {
     const valid = drafts.filter((d) => d.childIds.length && d.title.trim() && d.date && (d.time || d.allDay));
     if (!valid.length) return;
     for (const d of valid) {
-      addActivity({
+      const saved = addActivity({
         childIds: d.childIds,
         title: d.title.trim(),
         date: d.date,
@@ -206,6 +208,7 @@ export default function AddActivityPage() {
         collector: d.collector.length ? d.collector : undefined,
         notes: d.notes.trim() || undefined,
       });
+      if (d.sendReminder) sendActivityReminder(saved);
     }
     router.push(`/?date=${valid[0].date}`);
   };
@@ -398,8 +401,22 @@ function ActivityCard({ draft, index, children, helpers, total, onUpdate, onRemo
       />
 
       {/* Recurring toggle */}
-      <button type="button" onClick={() => onUpdate("recurring", !draft.recurring)} className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all ${draft.recurring ? "bg-violet-100 text-violet-600 border-2 border-violet-300" : "bg-gray-50 text-slate-400 border-2 border-gray-200"}`}>
+      <button type="button" onClick={() => onUpdate("recurring", !draft.recurring)} className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all mb-3 ${draft.recurring ? "bg-violet-100 text-violet-600 border-2 border-violet-300" : "bg-gray-50 text-slate-400 border-2 border-gray-200"}`}>
         {draft.recurring ? "🔁 Repeats weekly" : "One-off (tap for weekly)"}
+      </button>
+
+      {/* Instant reminder push, opt-in — pings whoever has a matching role
+          (owner/driver/collector) on this activity right when it's saved,
+          instead of waiting for the next scheduled digest. */}
+      <button
+        type="button"
+        onClick={() => onUpdate("sendReminder", !draft.sendReminder)}
+        className={`flex w-full items-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all ${draft.sendReminder ? "bg-pink-50 text-pink-600 border-2 border-pink-200" : "bg-gray-50 text-slate-400 border-2 border-gray-200"}`}
+      >
+        <span className={`flex h-4 w-4 items-center justify-center rounded-md border-2 ${draft.sendReminder ? "border-pink-600 bg-pink-600 text-white" : "border-gray-300"}`}>
+          {draft.sendReminder && "✓"}
+        </span>
+        📣 Notify who's involved right now
       </button>
     </div>
   );
