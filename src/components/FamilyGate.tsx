@@ -176,7 +176,7 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
         <div className="text-center">
           <h2 className="mb-1 text-lg font-black text-slate-900">Get started</h2>
           <p className="mx-auto mb-5 max-w-xs text-xs text-slate-500">
-            Enter your family name and a shared passphrase. Anyone who enters the same two things sees the same family &mdash; everyone else gets a completely separate space.
+            Enter your family name and a shared passphrase. Anyone who enters the same two things sees the same family &mdash; everyone else gets a completely separate space. Creating a brand-new family? You&apos;ll be asked to sign in with Google next, to become the account owner.
           </p>
           <div className="mx-auto flex w-full max-w-xs flex-col gap-3">
             <input
