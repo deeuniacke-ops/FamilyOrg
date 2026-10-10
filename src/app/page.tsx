@@ -20,9 +20,23 @@ function addDays(value: string, days: number) {
   return dateKey(d);
 }
 function timeLabel(time: string) { return new Date(`1970-01-01T${time}:00`).toLocaleTimeString("en-IE", { hour: "numeric", minute: "2-digit" }); }
+function finishTimeLabel(time: string, durationMinutes: number) {
+  const end = new Date(`1970-01-01T${time}:00`);
+  end.setMinutes(end.getMinutes() + durationMinutes);
+  return end.toLocaleTimeString("en-IE", { hour: "numeric", minute: "2-digit" });
+}
 function dayLabel(date: string) { return new Date(date + "T12:00:00").toLocaleDateString("en-IE", { weekday: "long", day: "numeric", month: "short" }); }
 function dateSummary(date: string) { return new Date(date + "T12:00:00").toLocaleDateString("en-IE", { weekday: "long", day: "numeric", month: "short" }); }
 function monthLabel(date: string) { return new Date(date + "T12:00:00").toLocaleDateString("en-IE", { month: "long", year: "numeric" }); }
+/** An activity minimizes in today's list once it's been over 30 minutes
+ *  since it ended - only meaningful for today (a past/future day's items
+ *  render normally, since "just finished" only makes sense for right now). */
+function isJustFinished(date: string, today: string, time: string, durationMinutes: number, allDay?: boolean): boolean {
+  if (allDay || date !== today) return false;
+  const end = new Date(`${date}T${time}:00`);
+  end.setMinutes(end.getMinutes() + durationMinutes + 30);
+  return new Date() > end;
+}
 
 export default function HomePage() {
   const router = useRouter();
@@ -181,27 +195,36 @@ export default function HomePage() {
                 const activityChildren = children.filter((c) => activity.childIds.includes(c.id));
                 const hasClash = dayClashes.has(activity.id);
                 const realId = activity.id.replace(/_\d{4}-\d{2}-\d{2}$/, "");
+                const isDone = isJustFinished(activity.date, today, activity.time, activity.durationMinutes, activity.allDay);
                 return <SwipeToAct key={activity.id} onTrigger={() => setActionActivity(activity)}>
-                  <Link href={`/activity/${realId}?date=${activity.date}`} className={`flex items-center gap-3 rounded-xl border border-l-4 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors ${activity.cancelled ? "opacity-50" : ""} ${hasClash ? "border-red-200" : "border-slate-200"}`} style={{ borderLeftColor: activityChildren[0]?.color }}>
+                  <Link href={`/activity/${realId}?date=${activity.date}`} className={`flex items-center gap-3 rounded-xl border border-l-4 bg-white shadow-sm active:bg-slate-50 transition-all ${isDone ? "p-2 opacity-50" : "p-3"} ${activity.cancelled ? "opacity-50" : ""} ${hasClash ? "border-red-200" : "border-slate-200"}`} style={{ borderLeftColor: activityChildren[0]?.color }}>
                     <div className="flex shrink-0 -space-x-2">
                       {activityChildren.map((c) => (
-                        <span key={c.id} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-700 text-sm font-black ring-2 ring-white" style={{ backgroundColor: c.color }}>{c.initials}</span>
+                        <span key={c.id} className={`flex items-center justify-center rounded-full text-slate-700 font-black ring-2 ring-white transition-all ${isDone ? "h-7 w-7 text-[9px]" : "h-10 w-10 text-sm"}`} style={{ backgroundColor: c.color }}>{c.initials}</span>
                       ))}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className={`truncate text-sm font-bold ${activity.cancelled ? "line-through text-slate-400" : "text-slate-900"}`}>{activity.title}</p>
-                      <p className="text-xs text-slate-500">{activityChildren.map((c) => c.name).join(", ")}{activity.allDay ? "" : ` · ${timeLabel(activity.time)} · ${activity.durationMinutes}m`}</p>
-                      {activity.cancelled && <p className="text-[10px] font-bold text-amber-600">🚫 Cancelled</p>}
-                      {activity.location && <p className="text-[11px] text-slate-400">📍 {activity.location}</p>}
-                      {!!activity.owner?.length && <p className="text-[10px] font-bold text-pink-500">🚗 {activity.owner.join(", ")}</p>}
-                      {!!activity.collector?.length && <p className="text-[10px] font-bold text-amber-600">🏠 {activity.collector.join(", ")}</p>}
-                      {activity.recurring === "weekly" && <p className="text-[10px] font-bold text-violet-500">🔁 Weekly</p>}
-                      {activity.notes && <p className="text-[10px] font-bold text-slate-400">📝 Note</p>}
+                      <p className={`truncate font-bold transition-all ${isDone ? "text-xs text-slate-400" : "text-sm"} ${activity.cancelled ? "line-through text-slate-400" : isDone ? "" : "text-slate-900"}`}>{activity.title}</p>
+                      {isDone ? (
+                        <p className="text-[11px] text-slate-400">{activityChildren.map((c) => c.name).join(", ")} · Finished {finishTimeLabel(activity.time, activity.durationMinutes)}</p>
+                      ) : (
+                        <>
+                          <p className="text-xs text-slate-500">{activityChildren.map((c) => c.name).join(", ")}{activity.allDay ? "" : ` · ${timeLabel(activity.time)} · Finish time: ${finishTimeLabel(activity.time, activity.durationMinutes)}`}</p>
+                          {activity.cancelled && <p className="text-[10px] font-bold text-amber-600">🚫 Cancelled</p>}
+                          {activity.location && <p className="text-[11px] text-slate-400">📍 {activity.location}</p>}
+                          {!!activity.owner?.length && <p className="text-[10px] font-bold text-pink-500">🚗 {activity.owner.join(", ")}</p>}
+                          {!!activity.collector?.length && <p className="text-[10px] font-bold text-amber-600">🏠 {activity.collector.join(", ")}</p>}
+                          {activity.recurring === "weekly" && <p className="text-[10px] font-bold text-violet-500">🔁 Weekly</p>}
+                          {activity.notes && <p className="text-[10px] font-bold text-slate-400">📝 Note</p>}
+                        </>
+                      )}
                     </div>
-                    <div className="shrink-0 text-right">
-                      <p className="text-sm font-black text-slate-700">{activity.allDay ? "All day" : activity.time}</p>
-                      {hasClash && <p className="text-[10px] font-bold text-red-500">⚠ Clash</p>}
-                    </div>
+                    {!isDone && (
+                      <div className="shrink-0 text-right">
+                        <p className="text-sm font-black text-slate-700">{activity.allDay ? "All day" : activity.time}</p>
+                        {hasClash && <p className="text-[10px] font-bold text-red-500">⚠ Clash</p>}
+                      </div>
+                    )}
                   </Link>
                 </SwipeToAct>;
               })}
@@ -238,28 +261,37 @@ export default function HomePage() {
               {items.map((activity) => {
                 const activityChildren = children.filter((c) => activity.childIds.includes(c.id));
                 const realId = activity.id.replace(/_\d{4}-\d{2}-\d{2}$/, "");
+                const isDone = isJustFinished(activity.date, today, activity.time, activity.durationMinutes, activity.allDay);
                 return <SwipeToAct key={activity.id} onTrigger={() => setActionActivity(activity)}>
-                  <Link href={`/activity/${realId}?date=${activity.date}`} className={`flex items-center gap-3 rounded-xl border border-l-4 border-slate-200 bg-white p-3 shadow-sm active:bg-slate-50 transition-colors ${activity.cancelled ? "opacity-50" : ""}`} style={{ borderLeftColor: activityChildren[0]?.color }}>
+                  <Link href={`/activity/${realId}?date=${activity.date}`} className={`flex items-center gap-3 rounded-xl border border-l-4 border-slate-200 bg-white shadow-sm active:bg-slate-50 transition-all ${isDone ? "p-2 opacity-50" : "p-3"} ${activity.cancelled ? "opacity-50" : ""}`} style={{ borderLeftColor: activityChildren[0]?.color }}>
                     <div className="flex shrink-0 -space-x-2">
                       {activityChildren.map((c) => (
-                        <span key={c.id} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-700 text-sm font-black ring-2 ring-white" style={{ backgroundColor: c.color }}>{c.initials}</span>
+                        <span key={c.id} className={`flex items-center justify-center rounded-full text-slate-700 font-black ring-2 ring-white transition-all ${isDone ? "h-7 w-7 text-[9px]" : "h-10 w-10 text-sm"}`} style={{ backgroundColor: c.color }}>{c.initials}</span>
                       ))}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className={`truncate text-sm font-bold ${activity.cancelled ? "line-through text-slate-400" : "text-slate-900"}`}>{activity.title}</p>
-                      <p className="text-xs text-slate-500">{activityChildren.map((c) => c.name).join(", ")} · {dayLabel(activity.date)}</p>
-                      {!activity.allDay && <p className="text-xs text-slate-400">{timeLabel(activity.time)} · {activity.durationMinutes}m</p>}
-                      {activity.cancelled && <p className="text-[10px] font-bold text-amber-600">🚫 Cancelled</p>}
-                      {activity.location && <p className="text-[11px] text-slate-400">📍 {activity.location}</p>}
-                      {!!activity.owner?.length && <p className="text-[10px] font-bold text-pink-500">🚗 {activity.owner.join(", ")}</p>}
-                      {!!activity.collector?.length && <p className="text-[10px] font-bold text-amber-600">🏠 {activity.collector.join(", ")}</p>}
-                      {activity.recurring === "weekly" && <p className="text-[10px] font-bold text-violet-500">🔁 Weekly</p>}
-                      {activity.notes && <p className="text-[10px] font-bold text-slate-400">📝 Note</p>}
+                      <p className={`truncate font-bold transition-all ${isDone ? "text-xs text-slate-400" : "text-sm"} ${activity.cancelled ? "line-through text-slate-400" : isDone ? "" : "text-slate-900"}`}>{activity.title}</p>
+                      {isDone ? (
+                        <p className="text-[11px] text-slate-400">{activityChildren.map((c) => c.name).join(", ")} · Finished {finishTimeLabel(activity.time, activity.durationMinutes)}</p>
+                      ) : (
+                        <>
+                          <p className="text-xs text-slate-500">{activityChildren.map((c) => c.name).join(", ")} · {dayLabel(activity.date)}</p>
+                          {!activity.allDay && <p className="text-xs text-slate-400">{timeLabel(activity.time)} · Finish time: {finishTimeLabel(activity.time, activity.durationMinutes)}</p>}
+                          {activity.cancelled && <p className="text-[10px] font-bold text-amber-600">🚫 Cancelled</p>}
+                          {activity.location && <p className="text-[11px] text-slate-400">📍 {activity.location}</p>}
+                          {!!activity.owner?.length && <p className="text-[10px] font-bold text-pink-500">🚗 {activity.owner.join(", ")}</p>}
+                          {!!activity.collector?.length && <p className="text-[10px] font-bold text-amber-600">🏠 {activity.collector.join(", ")}</p>}
+                          {activity.recurring === "weekly" && <p className="text-[10px] font-bold text-violet-500">🔁 Weekly</p>}
+                          {activity.notes && <p className="text-[10px] font-bold text-slate-400">📝 Note</p>}
+                        </>
+                      )}
                     </div>
-                    <div className="shrink-0 text-right">
-                      <p className="text-xs font-bold text-slate-600">{new Date(activity.date + "T12:00:00").toLocaleDateString("en-IE", { day: "numeric", month: "short" })}</p>
-                      <p className="text-sm font-black text-slate-700">{activity.allDay ? "All day" : activity.time}</p>
-                    </div>
+                    {!isDone && (
+                      <div className="shrink-0 text-right">
+                        <p className="text-xs font-bold text-slate-600">{new Date(activity.date + "T12:00:00").toLocaleDateString("en-IE", { day: "numeric", month: "short" })}</p>
+                        <p className="text-sm font-black text-slate-700">{activity.allDay ? "All day" : activity.time}</p>
+                      </div>
+                    )}
                   </Link>
                 </SwipeToAct>;
               })}
