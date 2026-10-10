@@ -338,10 +338,13 @@ export function addActivity(input: Omit<FamilyActivity, "id">): FamilyActivity {
 /** Opt-in, explicit "push a reminder now" for one activity - unlike
  *  notifyFamily (which fires a generic ping to everyone on every add),
  *  this only reaches people with a matching role (owner/driver/collector)
- *  on this specific activity, with role-aware wording. Fire-and-forget,
- *  same as notifyFamily. Accepts just the fields the reminder actually
- *  needs (not necessarily a saved activity with an id), so both a
- *  freshly-created activity and an in-place edit can use it. */
+ *  on this specific activity, with role-aware wording. Accepts just the
+ *  fields the reminder actually needs (not necessarily a saved activity
+ *  with an id), so both a freshly-created activity and an in-place edit
+ *  can use it. Doesn't block the caller (the request is fired and the
+ *  result toasted whenever it resolves, even after navigating away) but
+ *  does surface the outcome - silently doing nothing when nobody matched
+ *  was indistinguishable from it being broken. */
 export function sendActivityReminder(activity: {
   title: string; date: string; time: string; durationMinutes: number;
   allDay?: boolean; childIds: string[]; owner?: string[]; collector?: string[];
@@ -351,7 +354,14 @@ export function sendActivityReminder(activity: {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ familyId: activeFamilyId, activity }),
-  }).catch(() => {});
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (typeof data.sent !== "number") { showToast("Couldn't send the reminder.", "error"); return; }
+      if (data.sent > 0) showToast(`Reminder sent to ${data.sent} device${data.sent !== 1 ? "s" : ""}.`, "info");
+      else showToast("No reminder sent — nobody linked to this activity has notifications set up (Manage → Who are you / Notifications).", "warning");
+    })
+    .catch(() => showToast("Couldn't send the reminder — check your connection.", "error"));
 }
 
 /** Bulk-adds activities in one write, for flows that create many at once
