@@ -2,17 +2,15 @@ import type { MyIdentity } from "./member-link";
 
 export type MatchedRole = "owner" | "driver" | "collector";
 
-/** Which role(s) `identity` plays on `activity` - a child can only ever be
- *  the "owner" (it's their activity), a helper can be driver and/or
- *  collector (or neither) depending on the owner/collector assignments. */
+/** Which role(s) `identity` plays on `activity` - checked independently, so
+ *  one person (e.g. Mum) can be the owner of their own activity AND a
+ *  driver/collector for someone else's, all at once. */
 export function matchRoles(
   identity: MyIdentity,
   activity: { childIds: string[]; owner?: string[]; collector?: string[] }
 ): MatchedRole[] {
-  if (identity.type === "child") {
-    return activity.childIds.includes(identity.id) ? ["owner"] : [];
-  }
   const roles: MatchedRole[] = [];
+  if (identity.childId && activity.childIds.includes(identity.childId)) roles.push("owner");
   if (activity.owner?.includes(identity.name)) roles.push("driver");
   if (activity.collector?.includes(identity.name)) roles.push("collector");
   return roles;

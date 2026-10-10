@@ -152,38 +152,34 @@ export default function ManagePage() {
     setTimeout(() => setShareStatus(""), 3000);
   };
 
+  // One combined list of everyone this device could belong to - a person
+  // (e.g. Mum) can be both a driver/collector AND have their own activities,
+  // so this isn't split into separate "helper" vs "child" lists. Dedupes by
+  // name: a helper name that matches a child's name becomes one entry
+  // carrying both, so picking "Mum" once covers both kinds of reminders.
+  const people = (() => {
+    const byName = new Map<string, { name: string; childId?: string; color?: string; initials?: string }>();
+    for (const c of children) byName.set(c.name, { name: c.name, childId: c.id, color: c.color, initials: c.initials });
+    for (const h of helpers) if (!byName.has(h)) byName.set(h, { name: h });
+    return Array.from(byName.values());
+  })();
+
   return (
     <div className="animate-fade-in">
       <div className="bg-white rounded-2xl shadow-card p-4 mb-6">
         <h3 className="font-bold text-slate-800 mb-1">Who are you on this device?</h3>
         <p className="text-[10px] text-slate-400 mb-3">So the app can greet you by name and personalize your reminders — no sign-in needed</p>
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">A driver or collector</p>
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {helpers.map((h) => {
-            const isMe = myIdentity?.type === "helper" && myIdentity.name === h;
-            return (
-              <button
-                key={h}
-                onClick={() => setMyIdentity({ type: "helper", name: h })}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isMe ? "ring-2 ring-violet-500 bg-white shadow text-violet-700" : "bg-gray-100 text-slate-500"}`}
-              >
-                {h}
-              </button>
-            );
-          })}
-        </div>
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Or a child (e.g. you're the one with the activity)</p>
         <div className="flex flex-wrap gap-1.5 mb-2">
-          {children.map((c) => {
-            const isMe = myIdentity?.type === "child" && myIdentity.id === c.id;
+          {people.map((p) => {
+            const isMe = myIdentity?.name === p.name;
             return (
               <button
-                key={c.id}
-                onClick={() => setMyIdentity({ type: "child", id: c.id, name: c.name })}
+                key={p.name}
+                onClick={() => setMyIdentity({ name: p.name, childId: p.childId })}
                 className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${isMe ? "ring-2 ring-violet-500 bg-white shadow text-violet-700" : "bg-gray-100 text-slate-500"}`}
               >
-                <span className="flex h-5 w-5 items-center justify-center rounded-full text-slate-700 text-[9px] font-black" style={{ backgroundColor: c.color }}>{c.initials}</span>
-                {c.name}
+                {p.initials && <span className="flex h-5 w-5 items-center justify-center rounded-full text-slate-700 text-[9px] font-black" style={{ backgroundColor: p.color }}>{p.initials}</span>}
+                {p.name}
               </button>
             );
           })}

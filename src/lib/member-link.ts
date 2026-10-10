@@ -6,15 +6,14 @@
  *  Mirrors family-id.ts's plain-localStorage pattern - not synced to
  *  Firestore, purely per-device.
  *
- *  Two kinds, since they're matched against activities differently:
- *  - "helper": matched by name against an activity's owner/collector
- *    string arrays (who's driving/collecting).
- *  - "child": matched by id against an activity's childIds (whose
- *    activity it actually is - e.g. Emma-Lou has hockey, so Emma-Lou is
- *    the "owner" of that activity, distinct from who's driving her there). */
-export type MyIdentity =
-  | { type: "helper"; name: string }
-  | { type: "child"; id: string; name: string };
+ *  One person can plausibly be both a driver/collector for the kids AND
+ *  have their own activities (e.g. Mum drives Aedy to football, but also
+ *  has her own Personal Training session) - so this isn't split into
+ *  separate "helper" vs "child" identities. `name` matches against an
+ *  activity's owner/collector string arrays (driving/collecting); `childId`
+ *  (when this person is also a Child record) matches against childIds
+ *  (whose activity it actually is). Both checks always run together. */
+export type MyIdentity = { name: string; childId?: string };
 
 const MY_IDENTITY_KEY = "familyorg_my_identity";
 
