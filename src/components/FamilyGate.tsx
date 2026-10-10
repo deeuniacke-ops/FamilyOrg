@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { deriveFamilyId, getStoredFamilyId, storeFamilyId, setFamilyLetterCookie } from "@/lib/family-id";
-import { getFamilyName, initFamilySync } from "@/lib/family-store";
-import { initAuthListener } from "@/lib/auth";
+import { getFamilyName, initFamilySync, setFamilyOwner } from "@/lib/family-store";
+import { initAuthListener, getCurrentUser, signInWithGoogle } from "@/lib/auth";
+import type { User } from "firebase/auth";
 import { FEATURES } from "@/lib/features";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
@@ -20,9 +21,14 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
   const [checking, setChecking] = useState(false);
   const [joining, setJoining] = useState(false);
   const [pendingNewFamily, setPendingNewFamily] = useState<{ id: string; name: string } | null>(null);
+  const [authUser, setAuthUser] = useState<User | null>(null);
+  const [signInError, setSignInError] = useState("");
 
   useEffect(() => {
     initAuthListener();
+    setAuthUser(getCurrentUser());
+    const onAuthChange = () => setAuthUser(getCurrentUser());
+    window.addEventListener("member-sync", onAuthChange);
     const params = new URLSearchParams(window.location.search);
     const sharedId = params.get("fid");
     if (sharedId && /^[a-f0-9]{64}$/.test(sharedId)) {
@@ -30,13 +36,14 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
       storeFamilyId(sharedId);
       initFamilySync(sharedId);
       setReady(true);
-      return;
+      return () => window.removeEventListener("member-sync", onAuthChange);
     }
     const storedId = getStoredFamilyId();
     if (storedId) {
       initFamilySync(storedId);
       setReady(true);
     }
+    return () => window.removeEventListener("member-sync", onAuthChange);
   }, []);
 
   // The installed home-screen icon should show the family's own initial,
@@ -80,6 +87,23 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
     }
   };
 
+  const handleSignInToCreate = async () => {
+    setSignInError("");
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      console.error("Sign in failed:", err);
+      setSignInError("Couldn't sign in — try again.");
+    }
+  };
+
+  const handleCreateFamily = () => {
+    if (!pendingNewFamily || !authUser) return;
+    const { id, name: familyDisplayName } = pendingNewFamily;
+    completeJoin(id, familyDisplayName);
+    setFamilyOwner(authUser.uid, authUser.email || undefined, authUser.displayName || undefined);
+  };
+
   if (pendingNewFamily) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center animate-fade-in">
@@ -91,13 +115,29 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
           If you meant to join a family that already exists, go back and double-check the name and passphrase &mdash; passphrases are case-sensitive.
         </p>
         <div className="flex w-full max-w-xs flex-col gap-3">
-          <button
-            onClick={() => completeJoin(pendingNewFamily.id, pendingNewFamily.name)}
-            disabled={joining}
-            className="w-full rounded-xl bg-violet-600 py-3 text-sm font-bold text-white shadow-md transition-all active:bg-violet-700 disabled:opacity-30"
-          >
-            {joining ? "Creating…" : `Yes, create "${pendingNewFamily.name}"`}
-          </button>
+          {!authUser ? (
+            <>
+              <p className="-mt-2 mb-1 text-xs font-bold text-violet-600">Sign in with Google to create it and become the account owner &mdash; everyone else in the family just uses the shared link or passphrase, no sign-in needed for them.</p>
+              <button
+                onClick={handleSignInToCreate}
+                className="w-full rounded-xl bg-violet-600 py-3 text-sm font-bold text-white shadow-md transition-all active:bg-violet-700"
+              >
+                Sign in with Google
+              </button>
+              {signInError && <p className="text-xs font-bold text-red-500">{signInError}</p>}
+            </>
+          ) : (
+            <>
+              <p className="-mt-2 mb-1 text-[11px] text-slate-400">Creating as {authUser.displayName || authUser.email}</p>
+              <button
+                onClick={handleCreateFamily}
+                disabled={joining}
+                className="w-full rounded-xl bg-violet-600 py-3 text-sm font-bold text-white shadow-md transition-all active:bg-violet-700 disabled:opacity-30"
+              >
+                {joining ? "Creating…" : `Yes, create "${pendingNewFamily.name}"`}
+              </button>
+            </>
+          )}
           <button
             onClick={() => setPendingNewFamily(null)}
             className="w-full rounded-xl border-2 border-gray-200 py-3 text-sm font-bold text-slate-500"
