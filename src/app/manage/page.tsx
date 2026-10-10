@@ -32,6 +32,7 @@ export default function ManagePage() {
   const [authUser, setAuthUser] = useState<User | null>(null);
   const [familyOwner, setFamilyOwnerState] = useState<{ uid: string; email?: string; name?: string } | null>(null);
   const [myIdentity, setMyIdentityState] = useState<MyIdentity | null>(null);
+  const [changingIdentity, setChangingIdentity] = useState(false);
   const [signInError, setSignInError] = useState("");
 
   const refresh = () => {
@@ -169,22 +170,28 @@ export default function ManagePage() {
       <div className="bg-white rounded-2xl shadow-card p-4 mb-6">
         <h3 className="font-bold text-slate-800 mb-1">Who are you on this device?</h3>
         <p className="text-[10px] text-slate-400 mb-3">So the app can greet you by name and personalize your reminders — no sign-in needed</p>
-        <div className="flex flex-wrap gap-1.5 mb-2">
-          {people.map((p) => {
-            const isMe = myIdentity?.name === p.name;
-            return (
-              <button
-                key={p.name}
-                onClick={() => setMyIdentity({ name: p.name, childId: p.childId })}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${isMe ? "ring-2 ring-violet-500 bg-white shadow text-violet-700" : "bg-gray-100 text-slate-500"}`}
-              >
-                {p.initials && <span className="flex h-5 w-5 items-center justify-center rounded-full text-slate-700 text-[9px] font-black" style={{ backgroundColor: p.color }}>{p.initials}</span>}
-                {p.name}
-              </button>
-            );
-          })}
-        </div>
-        {myIdentity && <p className="text-[11px] font-bold text-violet-600">You&apos;re set as {myIdentity.name} ✓</p>}
+        {myIdentity && !changingIdentity ? (
+          <div className="flex items-center justify-between">
+            <p className="text-[11px] font-bold text-violet-600">You&apos;re set as {myIdentity.name} ✓</p>
+            <button onClick={() => setChangingIdentity(true)} className="text-xs font-bold text-violet-500">Change</button>
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {people.map((p) => {
+              const isMe = myIdentity?.name === p.name;
+              return (
+                <button
+                  key={p.name}
+                  onClick={() => { setMyIdentity({ name: p.name, childId: p.childId }); setChangingIdentity(false); }}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${isMe ? "ring-2 ring-violet-500 bg-white shadow text-violet-700" : "bg-gray-100 text-slate-500"}`}
+                >
+                  {p.initials && <span className="flex h-5 w-5 items-center justify-center rounded-full text-slate-700 text-[9px] font-black" style={{ backgroundColor: p.color }}>{p.initials}</span>}
+                  {p.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="bg-white rounded-2xl shadow-card p-4 mb-6">
