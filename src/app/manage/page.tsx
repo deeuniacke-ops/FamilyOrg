@@ -2,14 +2,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  addChild, addHelper, colours, getChildren, getFamilyName, getFamilyOwner, getHelpers,
-  setFamilyName as saveFamilyName, setFamilyOwner, removeChild, removeHelper, updateChild, Child,
+  addChild, addHelper, colours, getChildren, getFamilyName, getHelpers,
+  setFamilyName as saveFamilyName, removeChild, removeHelper, updateChild, Child,
 } from "@/lib/family-store";
 import { leaveFamily, getStoredFamilyId } from "@/lib/family-id";
 import { getPushStatus, subscribeToPush, unsubscribeFromPush, PushStatus } from "@/lib/push";
-import { getCurrentUser, signInWithGoogle, signOutUser } from "@/lib/auth";
 import { getMyIdentity, setMyIdentity, MyIdentity } from "@/lib/member-link";
-import type { User } from "firebase/auth";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
 export default function ManagePage() {
@@ -29,18 +27,13 @@ export default function ManagePage() {
   const [confirmingLeave, setConfirmingLeave] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
-  const [authUser, setAuthUser] = useState<User | null>(null);
-  const [familyOwner, setFamilyOwnerState] = useState<{ uid: string; email?: string; name?: string } | null>(null);
   const [myIdentity, setMyIdentityState] = useState<MyIdentity | null>(null);
   const [changingIdentity, setChangingIdentity] = useState(false);
-  const [signInError, setSignInError] = useState("");
 
   const refresh = () => {
     setChildren(getChildren());
     setHelpers(getHelpers());
     setFamilyName(getFamilyName());
-    setAuthUser(getCurrentUser());
-    setFamilyOwnerState(getFamilyOwner());
     setMyIdentityState(getMyIdentity());
   };
   useEffect(() => {
@@ -124,18 +117,6 @@ export default function ManagePage() {
     setTimeout(() => setFeedbackSent(false), 4000);
   };
 
-  const handleSignIn = async () => {
-    setSignInError("");
-    try {
-      const result = await signInWithGoogle();
-      setFamilyOwner(result.user.uid, result.user.email || undefined, result.user.displayName || undefined);
-      refresh();
-    } catch (err) {
-      console.error("Sign in failed:", err);
-      setSignInError("Couldn't sign in — try again.");
-    }
-  };
-
   const handleShare = async () => {
     const fid = getStoredFamilyId();
     if (!fid) return;
@@ -191,27 +172,6 @@ export default function ManagePage() {
               );
             })}
           </div>
-        )}
-      </div>
-
-      <div className="bg-white rounded-2xl shadow-card p-4 mb-6">
-        <h3 className="font-bold text-slate-800 mb-1">Family owner</h3>
-        {!authUser && !familyOwner && (
-          <>
-            <p className="text-[10px] text-slate-400 mb-3">Sign in with Google to establish who owns this family — useful later if you set up billing</p>
-            <button onClick={handleSignIn} className="w-full py-2.5 rounded-xl bg-violet-600 text-white text-sm font-bold">
-              Sign in with Google
-            </button>
-            {signInError && <p className="mt-2 text-[11px] text-red-500">{signInError}</p>}
-          </>
-        )}
-        {familyOwner && (
-          <p className="text-sm font-bold text-violet-700">Family owner: {familyOwner.name || familyOwner.email} ✓</p>
-        )}
-        {authUser && !familyOwner && (
-          <button onClick={() => signOutUser()} className="mt-2 w-full py-2 rounded-xl border-2 border-gray-200 text-xs font-bold text-slate-400">
-            Sign out
-          </button>
         )}
       </div>
 
