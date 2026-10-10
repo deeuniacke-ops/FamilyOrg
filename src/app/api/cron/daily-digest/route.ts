@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { FamilyActivity } from "@/lib/family-store";
+import type { MyIdentity } from "@/lib/member-link";
+import { matchRoles, describeActivityForMe } from "@/lib/activity-roles";
 
 function localDate(d: Date): string {
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
@@ -51,7 +53,7 @@ export async function GET(request: NextRequest) {
     // possible here because admin credentials bypass the security rules
     // that (correctly) block this from any normal client.
     const activitiesSnap = await db.collectionGroup("activities").get();
-    const byFamily = new Map<string, { title: string; time: string; allDay?: boolean; owner?: string[]; collector?: string[] }[]>();
+    const byFamily = new Map<string, { title: string; time: string; allDay?: boolean; owner?: string[]; collector?: string[]; childIds: string[] }[]>();
     for (const docSnap of activitiesSnap.docs) {
       const familyId = docSnap.ref.parent.parent?.id;
       if (!familyId) continue;
@@ -59,7 +61,7 @@ export async function GET(request: NextRequest) {
       const occurrence = occursOnDate(activity, targetDate);
       if (!occurrence || occurrence.cancelled) continue;
       const list = byFamily.get(familyId) || [];
-      list.push({ title: occurrence.title, time: occurrence.time, allDay: occurrence.allDay, owner: occurrence.owner, collector: occurrence.collector });
+      list.push({ title: occurrence.title, time: occurrence.time, allDay: occurrence.allDay, owner: occurrence.owner, collector: occurrence.collector, childIds: occurrence.childIds || [] });
       byFamily.set(familyId, list);
     }
 
@@ -78,29 +80,37 @@ export async function GET(request: NextRequest) {
       const familyName = (familySettings.data()?.name as string) || "Family";
       const icon = `${request.nextUrl.origin}/api/family-icon/${letterFor(familyName)}/192`;
 
+      const childrenSnap = await db.collection("families").doc(familyId).collection("children").get();
+      const childNameById = new Map(childrenSnap.docs.map((d) => [d.id, (d.data()?.name as string) || ""]));
+
       activities.sort((a, b) => (a.allDay ? "" : a.time).localeCompare(b.allDay ? "" : b.time));
       const title = type === "morning" ? "Good morning! ☀️ Here's your day" : "Getting ready for tomorrow";
       const shown = activities.slice(0, 4).map((a) => (a.allDay ? a.title : `${a.time} ${a.title}`));
       const body = shown.join(", ") + (activities.length > 4 ? ` +${activities.length - 4} more` : "");
 
       // Personalize per-subscription when the device tagged itself with a
-      // "who am I" helper name (src/lib/member-link.ts, device-local, no
+      // "who am I" identity (src/lib/member-link.ts, device-local, no
       // sign-in required) - untagged subscriptions still get the generic
       // family-wide digest above, unchanged.
       let sentAny = false;
       for (const subDoc of subsSnap.docs) {
-        const sub = subDoc.data() as { endpoint?: string; keys?: { p256dh?: string; auth?: string }; helperName?: string };
+        const sub = subDoc.data() as { endpoint?: string; keys?: { p256dh?: string; auth?: string }; identity?: MyIdentity };
         if (!sub.endpoint || !sub.keys?.p256dh || !sub.keys?.auth) continue;
 
-        const helperName = sub.helperName;
+        const identity = sub.identity;
         let sendTitle = title;
         let sendBody = body;
-        if (helperName) {
-          const mine = activities.filter((a) => a.owner?.includes(helperName) || a.collector?.includes(helperName));
-          if (!mine.length) continue; // personalized + nothing for them today - skip rather than send the generic one
-          sendTitle = type === "morning" ? `Good morning, ${helperName}! ☀️` : `Heads up, ${helperName} — tomorrow`;
-          const shownMine = mine.slice(0, 4).map((a) => (a.allDay ? a.title : `${a.time} ${a.title}`));
-          sendBody = shownMine.join(", ") + (mine.length > 4 ? ` +${mine.length - 4} more` : "");
+        if (identity) {
+          const lines = activities.flatMap((a) => {
+            const roles = matchRoles(identity, a);
+            if (!roles.length) return [];
+            const childNames = a.childIds.map((id) => childNameById.get(id)).filter((n): n is string => !!n);
+            return describeActivityForMe(roles, a, childNames);
+          });
+          if (!lines.length) continue; // personalized + nothing for them today - skip rather than send the generic one
+          sendTitle = type === "morning" ? `Good morning, ${identity.name}! ☀️` : `Heads up, ${identity.name} — tomorrow`;
+          const shownMine = lines.slice(0, 4);
+          sendBody = shownMine.join(", ") + (lines.length > 4 ? ` +${lines.length - 4} more` : "");
         }
 
         try {

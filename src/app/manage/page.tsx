@@ -8,7 +8,7 @@ import {
 import { leaveFamily, getStoredFamilyId } from "@/lib/family-id";
 import { getPushStatus, subscribeToPush, unsubscribeFromPush, PushStatus } from "@/lib/push";
 import { getCurrentUser, signInWithGoogle, signOutUser } from "@/lib/auth";
-import { getMyHelperName, setMyHelperName } from "@/lib/member-link";
+import { getMyIdentity, setMyIdentity, MyIdentity } from "@/lib/member-link";
 import type { User } from "firebase/auth";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
@@ -31,7 +31,7 @@ export default function ManagePage() {
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [authUser, setAuthUser] = useState<User | null>(null);
   const [familyOwner, setFamilyOwnerState] = useState<{ uid: string; email?: string; name?: string } | null>(null);
-  const [myHelperName, setMyHelperNameState] = useState<string | null>(null);
+  const [myIdentity, setMyIdentityState] = useState<MyIdentity | null>(null);
   const [signInError, setSignInError] = useState("");
 
   const refresh = () => {
@@ -40,7 +40,7 @@ export default function ManagePage() {
     setFamilyName(getFamilyName());
     setAuthUser(getCurrentUser());
     setFamilyOwnerState(getFamilyOwner());
-    setMyHelperNameState(getMyHelperName());
+    setMyIdentityState(getMyIdentity());
   };
   useEffect(() => {
     refresh();
@@ -157,18 +157,38 @@ export default function ManagePage() {
       <div className="bg-white rounded-2xl shadow-card p-4 mb-6">
         <h3 className="font-bold text-slate-800 mb-1">Who are you on this device?</h3>
         <p className="text-[10px] text-slate-400 mb-3">So the app can greet you by name and personalize your reminders — no sign-in needed</p>
-        <div className="flex flex-wrap gap-1.5 mb-2">
-          {helpers.map((h) => (
-            <button
-              key={h}
-              onClick={() => setMyHelperName(h)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${myHelperName === h ? "ring-2 ring-violet-500 bg-white shadow text-violet-700" : "bg-gray-100 text-slate-500"}`}
-            >
-              {h}
-            </button>
-          ))}
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">A driver or collector</p>
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {helpers.map((h) => {
+            const isMe = myIdentity?.type === "helper" && myIdentity.name === h;
+            return (
+              <button
+                key={h}
+                onClick={() => setMyIdentity({ type: "helper", name: h })}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isMe ? "ring-2 ring-violet-500 bg-white shadow text-violet-700" : "bg-gray-100 text-slate-500"}`}
+              >
+                {h}
+              </button>
+            );
+          })}
         </div>
-        {myHelperName && <p className="text-[11px] font-bold text-violet-600">You&apos;re set as {myHelperName} ✓</p>}
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Or a child (e.g. you're the one with the activity)</p>
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {children.map((c) => {
+            const isMe = myIdentity?.type === "child" && myIdentity.id === c.id;
+            return (
+              <button
+                key={c.id}
+                onClick={() => setMyIdentity({ type: "child", id: c.id, name: c.name })}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${isMe ? "ring-2 ring-violet-500 bg-white shadow text-violet-700" : "bg-gray-100 text-slate-500"}`}
+              >
+                <span className="flex h-5 w-5 items-center justify-center rounded-full text-slate-700 text-[9px] font-black" style={{ backgroundColor: c.color }}>{c.initials}</span>
+                {c.name}
+              </button>
+            );
+          })}
+        </div>
+        {myIdentity && <p className="text-[11px] font-bold text-violet-600">You&apos;re set as {myIdentity.name} ✓</p>}
       </div>
 
       <div className="bg-white rounded-2xl shadow-card p-4 mb-6">
