@@ -6,7 +6,6 @@ import { db } from "@/lib/firebase";
 import { deriveFamilyId, getStoredFamilyId, storeFamilyId, setFamilyLetterCookie } from "@/lib/family-id";
 import { getFamilyName, initFamilySync } from "@/lib/family-store";
 import { initAuthListener } from "@/lib/auth";
-import { initMemberLinkSync } from "@/lib/member-link";
 import { FEATURES } from "@/lib/features";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
@@ -24,7 +23,6 @@ export default function FamilyGate({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     initAuthListener();
-    initMemberLinkSync();
     const params = new URLSearchParams(window.location.search);
     const sharedId = params.get("fid");
     if (sharedId && /^[a-f0-9]{64}$/.test(sharedId)) {

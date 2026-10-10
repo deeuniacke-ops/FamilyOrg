@@ -1,19 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getLinkedMember } from "@/lib/member-link";
+import { getMyHelperName } from "@/lib/member-link";
 import { getActivitiesForDates } from "@/lib/family-store";
 
 export default function PersonalGreeting() {
   const [helperName, setHelperName] = useState<string | null>(null);
 
   useEffect(() => {
-    const refresh = () => setHelperName(getLinkedMember()?.helperName ?? null);
+    const refresh = () => setHelperName(getMyHelperName());
     refresh();
-    window.addEventListener("member-sync", refresh);
+    window.addEventListener("my-identity-sync", refresh);
     window.addEventListener("family-sync", refresh);
     return () => {
-      window.removeEventListener("member-sync", refresh);
+      window.removeEventListener("my-identity-sync", refresh);
       window.removeEventListener("family-sync", refresh);
     };
   }, []);

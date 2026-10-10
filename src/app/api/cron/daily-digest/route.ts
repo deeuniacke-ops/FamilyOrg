@@ -83,18 +83,16 @@ export async function GET(request: NextRequest) {
       const shown = activities.slice(0, 4).map((a) => (a.allDay ? a.title : `${a.time} ${a.title}`));
       const body = shown.join(", ") + (activities.length > 4 ? ` +${activities.length - 4} more` : "");
 
-      // Personalize per-subscription when it's linked to a specific family
-      // member (uid -> helperName) - unlinked subscriptions still get the
-      // generic family-wide digest above, unchanged.
-      const membersSnap = await db.collection("families").doc(familyId).collection("members").get();
-      const helperByUid = new Map(membersSnap.docs.map((d) => [d.id, d.data()?.helperName as string | undefined]));
-
+      // Personalize per-subscription when the device tagged itself with a
+      // "who am I" helper name (src/lib/member-link.ts, device-local, no
+      // sign-in required) - untagged subscriptions still get the generic
+      // family-wide digest above, unchanged.
       let sentAny = false;
       for (const subDoc of subsSnap.docs) {
-        const sub = subDoc.data() as { endpoint?: string; keys?: { p256dh?: string; auth?: string }; uid?: string };
+        const sub = subDoc.data() as { endpoint?: string; keys?: { p256dh?: string; auth?: string }; helperName?: string };
         if (!sub.endpoint || !sub.keys?.p256dh || !sub.keys?.auth) continue;
 
-        const helperName = sub.uid ? helperByUid.get(sub.uid) : undefined;
+        const helperName = sub.helperName;
         let sendTitle = title;
         let sendBody = body;
         if (helperName) {

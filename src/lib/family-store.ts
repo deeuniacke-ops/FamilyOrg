@@ -131,6 +131,10 @@ let familyNameCache = "";
 let childrenCache: Child[] = [];
 let activitiesCache: FamilyActivity[] = [];
 let helpersCache: string[] = [];
+/** Whoever signed in with Google to establish ownership of this family
+ *  (for future billing/accountability) - not persisted to localStorage,
+ *  just refetched from Firestore on each load via the settings listener below. */
+let familyOwnerInfoCache: { uid: string; email?: string; name?: string } | null = null;
 
 function requireFamilyId(): string {
   if (!activeFamilyId) throw new Error("family-store used before initFamilySync() completed");
@@ -153,6 +157,7 @@ export function initFamilySync(familyId: string, seedDisplayName?: string) {
   unsubscribers.forEach((unsubscribe) => unsubscribe());
   unsubscribers = [];
   activeFamilyId = familyId;
+  familyOwnerInfoCache = null;
 
   if (get(CACHE_OWNER_KEY, "") === familyId) {
     childrenCache = get(CHILDREN_KEY, []);
@@ -186,12 +191,17 @@ export function initFamilySync(familyId: string, seedDisplayName?: string) {
     notify();
   }, onSyncError("activities")));
   unsubscribers.push(onSnapshot(familySettingsDoc(), (snapshot) => {
-    const name = snapshot.data()?.name;
+    const data = snapshot.data();
+    const name = data?.name;
     if (typeof name === "string") {
       familyNameCache = name;
       set(FAMILY_NAME_KEY, name);
-      notify();
-    } else if (seedDisplayName && !snapshot.exists()) {
+    }
+    familyOwnerInfoCache = typeof data?.ownerUid === "string"
+      ? { uid: data.ownerUid, email: data.ownerEmail, name: data.ownerName }
+      : null;
+    notify();
+    if (!snapshot.exists() && seedDisplayName) {
       fsWrite(() => setDoc(familySettingsDoc(), { name: seedDisplayName }, { merge: true }));
     }
   }, onSyncError("settings")));
@@ -221,6 +231,21 @@ export function setFamilyName(name: string) {
   familyNameCache = name;
   set(FAMILY_NAME_KEY, name);
   fsWrite(() => setDoc(familySettingsDoc(), { name }, { merge: true }));
+}
+
+/** Whoever has signed in with Google to establish ownership of this family
+ *  (for future billing/accountability) - distinct from "who am I on this
+ *  device" (see src/lib/member-link.ts), which every family member sets
+ *  locally with no sign-in required. */
+export function getFamilyOwner(): { uid: string; email?: string; name?: string } | null {
+  return familyOwnerInfoCache;
+}
+export function setFamilyOwner(uid: string, email?: string, name?: string) {
+  familyOwnerInfoCache = { uid, email, name };
+  const payload: Record<string, unknown> = { ownerUid: uid };
+  if (email) payload.ownerEmail = email;
+  if (name) payload.ownerName = name;
+  fsWrite(() => setDoc(familySettingsDoc(), payload, { merge: true }));
 }
 
 export function getHelpers(): string[] { return helpersCache; }
